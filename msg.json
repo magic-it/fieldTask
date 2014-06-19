@@ -1,0 +1,31 @@
+{
+    "message":"OK Task retrieved",
+    "status":"200",
+    "data":[
+        {
+            "task":{
+                "id":1,
+                "type":"xform",
+                "title":"task title2",
+                "url":"http://thai.cloudtec.com.au/formXML?key=15",
+                "formId":"naorobi",
+                "initial_data":"http://thai.cloudtec.com.au/instanceXML/naoroi/4",
+                "assignment_mode":"all",
+                "gps":false,
+                "camera":false,
+                "barcode":false,
+                "rfid":false,
+                "repeats":0,
+                "priority":0,
+                "scheduled_at":"Jun 1, 2012",
+                "assignment_status":"new"
+            },
+            "location":{
+                
+            },
+            "assignment":{
+                
+            }
+        }
+    ]
+}

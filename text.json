@@ -1,0 +1,126 @@
+{
+    "message":"OK Task retrieved",
+    "status":"200",
+    "data":[
+        {
+            "task":{
+                "id":1,
+                "location_id":1,
+                "type":"xform",
+                "title":"task title2",
+                "url":"http://thai.cloudtec.com.au/formXML?key\u003d25",
+                "initial_data":"",
+                "assignment_mode":"self",
+                "gps":false,
+                "camera":false,
+                "barcode":false,
+                "rfid":false,
+                "repeats":1,
+                "priority":3,
+                "schedule_at":"2012-03-06 00:00:00.0",
+                "from_date":"",
+                "due_date":"2012-03-02 00:00:00.0",
+                "created_date":"2012-03-06 00:00:00.0",
+                "created_by":1,
+                "assignment_status":"new",
+                "assigned_by":0
+            },
+            "location":{
+                "id":1,
+                "name":"location1",
+                "number":"24",
+                "street":"My STreet",
+                "locality":"locality1",
+                "postcode":"4321 WA",
+                "country":"Australianus",
+                "geometry":{
+                    "type":"Point",
+                    "coordinate":"(12,13)"
+                }
+            },
+            "assignment":{
+                "manager":0
+            }
+        },
+        {
+            "task":{
+                "id":2,
+                "location_id":1,
+                "type":"xform",
+                "title":"task title2",
+                "url":"http://thai.cloudtec.com.au/formXML?key\u003d25",
+                "initial_data":"",
+                "assignment_mode":"self",
+                "gps":false,
+                "camera":false,
+                "barcode":false,
+                "rfid":false,
+                "repeats":1,
+                "priority":3,
+                "schedule_at":"2012-03-06 00:00:00.0",
+                "from_date":"",
+                "due_date":"2012-03-02 00:00:00.0",
+                "created_date":"2012-03-06 00:00:00.0",
+                "created_by":1,
+                "assignment_status":"new",
+                "assigned_by":0
+            },
+            "location":{
+                "id":1,
+                "name":"location1",
+                "number":"24",
+                "street":"My STreet",
+                "locality":"locality1",
+                "postcode":"4321 WA",
+                "country":"Australianus",
+                "geometry":{
+                    "type":"Point",
+                    "coordinate":"(12,13)"
+                }
+            },
+            "assignment":{
+                "manager":0
+            }
+        },
+        {
+            "task":{
+                "id":3,
+                "location_id":1,
+                "type":"xform",
+                "title":"task title2",
+                "url":"http://thai.cloudtec.com.au/formXML?key\u003d25",
+                "initial_data":"",
+                "assignment_mode":"self",
+                "gps":false,
+                "camera":false,
+                "barcode":false,
+                "rfid":false,
+                "repeats":1,
+                "priority":3,
+                "schedule_at":"2012-03-06 00:00:00.0",
+                "from_date":"",
+                "due_date":"2012-03-02 00:00:00.0",
+                "created_date":"2012-03-06 00:00:00.0",
+                "created_by":1,
+                "assignment_status":"new",
+                "assigned_by":0
+            },
+            "location":{
+                "id":1,
+                "name":"location1",
+                "number":"24",
+                "street":"My STreet",
+                "locality":"locality1",
+                "postcode":"4321 WA",
+                "country":"Australianus",
+                "geometry":{
+                    "type":"Point",
+                    "coordinate":"(12,13)"
+                }
+            },
+            "assignment":{
+                "manager":0
+            }
+        }
+    ]
+}

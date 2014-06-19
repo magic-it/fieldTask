@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+		Copyright (C) 2013 Smap Consulting Pty Ltd Licensed under the Apache
+		License, Version 2.0 (the "License"); you may not use this file except
+		in compliance with the License. You may obtain a copy of the License
+		at http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+		applicable law or agreed to in writing, software distributed under the
+		License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+		CONDITIONS OF ANY KIND, either express or implied. See the License for
+		the specific language governing permissions and limitations under the
+		License.
+		This file contains overrides of odk strings
+-->
+<resources
+  xmlns:tools="http://schemas.android.com/tools"
+  tools:ignore="MissingTranslation">
+  
+<string name="change_password"> تغيير كلمة المرور </string>
+<string name="change_server_url"> تغيير خادم </string>
+<string name="change_username"> تغيير اسم المستخدم </string>
+<string name="click_to_web"> اللمس لموقع الويب سماب </string>
+<string name="constraint_behavior"> القيود </string>
+<string name="data"> البيانات </string>
+<string name="enter_data"> مسح البداية </string>
+<string name="forms"> أشكال </string>
+<string name="get_forms"> الحصول على استمارات جديدة </string>
+<string name="manage_files"> حذف أشكال </string>
+<string name="server_preferences"> إعدادات</string>
+<string name="send_data"> تقديم بيانات منتهية </string>
+<string name="show_sent_and_unsent_forms"> مشاهدة نماذج كاملة وغير كاملة</string>
+<string name="show_unsent_forms"> مشاهدة أشكال كاملة </string>
+</resources>

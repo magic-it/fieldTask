@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+		Copyright (C) 2013 Smap Consulting Pty Ltd Licensed under the Apache
+		License, Version 2.0 (the "License"); you may not use this file except
+		in compliance with the License. You may obtain a copy of the License
+		at http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+		applicable law or agreed to in writing, software distributed under the
+		License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+		CONDITIONS OF ANY KIND, either express or implied. See the License for
+		the specific language governing permissions and limitations under the
+		License.
+		This file contains strings that are specific to the fieldTask
+-->
+<resources
+  xmlns:tools="http://schemas.android.com/tools"
+  tools:ignore="MissingTranslation">
+
+    <string name="smap_accept_task"> قبول المهمة</string>
+    <string name="smap_accepted"> : قبلت .</string> 
+    <string name="smap_cannot_accept"> غير قادر على قبول المهمة</string> 
+    <string name="smap_cannot_complete"> غير قادر على إكمال المهمة</string>  
+    <string name="smap_cannot_reject">غير قادر على رفض المهمة</string>
+    <string name="smap_complete_task"> المهام كاملة</string>
+    <string name="smap_destination_not_found"> ​​لم يتم تعيين جهة لل مسار</string>
+    <string name="smap_done"> : القيام به. </string>
+    <string name="smap_enable_tasks">تمكين المهام</string>
+    <string name="smap_enable_tasks_summary">سيتم تحديث المهام من الخادم</string>
+    <string name="smap_finding_route">اكتشف</string>
+    <string name="smap_found_route">وقد وجد الطريق إلى الوجهة!</string>
+    <string name="smap_get_tasks">تحديث قائمة المهام</string>
+    <string name="smap_missed">: رفضت.</string>
+    <string name="smap_no_tasks">No tasks downloaded</string>
+    <string name="smap_pending">: معلقة.</string>
+    <string name="smap_reject_task">رفض العمل</string>
+    <string name="smap_route_finding_inprogress">العثور على المسار لهذه المهمة</string>
+    <string name="smap_routing_network_error">فشلت في العثور على المسار بسبب خطأ الشبكات</string>
+    <string name="smap_route_parse_error">تفشل في العثور على المسار بسبب خطأ أثناء تحليل المسار</string>
+    <string name="smap_synchronising">مزامنة مع ملقم</string>
+    <string name="smap_task_preferences">مهمة</string>
+    <string name="smap_tasks_not_enabled">المهام لم يتم تمكين - تمكين من شاشة إعدادات</string>
+    <string name="smap_taskList">قائمة المهام</string>
+    <string name="smap_taskMap">مهمة خريطة</string>
+    <string name="smap_zoom_data">التكبير لمهام </string>
+</resources>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+		Copyright (C) 2013 Smap Consulting Pty Ltd Licensed under the Apache
+		License, Version 2.0 (the "License"); you may not use this file except
+		in compliance with the License. You may obtain a copy of the License
+		at http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+		applicable law or agreed to in writing, software distributed under the
+		License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+		CONDITIONS OF ANY KIND, either express or implied. See the License for
+		the specific language governing permissions and limitations under the
+		License.
+		This file contains overrides of odk strings
+-->
+<resources
+  xmlns:tools="http://schemas.android.com/tools"
+  tools:ignore="MissingTranslation">
+  
+<string name="change_password">Change Password</string>
+<string name="change_server_url">Change Server</string>
+<string name="change_username">Change Username</string>
+<string name="click_to_web">Touch for Smap web site</string>
+<string name="constraint_behavior">Constraints</string>
+<string name="data">Data</string>
+<string name="enter_data">Start Survey</string>
+<string name="forms">Forms</string>
+<string name="get_forms">Get New Forms</string>
+<string name="manage_files">Delete Forms</string>
+<string name="server_preferences">Settings</string>
+<string name="send_data">Submit Finished Data</string>
+<string name="show_sent_and_unsent_forms">Show Complete and Incomplete Forms</string>
+<string name="show_unsent_forms">Show Complete Forms</string>
+</resources>
