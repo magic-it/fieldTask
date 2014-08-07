@@ -13,7 +13,7 @@
 	
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- strings that should not be translated -->
-	<string translatable="false" name="app_name">FieldTask v3.2</string>
-	<string translatable="false" name="default_server_url">http://dev.smap.com.au</string>
+	<string translatable="false" name="app_name">FieldTask v3.4</string>
+	<string translatable="false" name="default_server_url">http://demo.smap.com.au</string>
 	<string name="app_url">http://blog.smap.com.au</string>
 </resources>

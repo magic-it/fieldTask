@@ -10,6 +10,7 @@ import org.odk.collect.android.provider.InstanceProviderAPI;
 import org.odk.collect.android.provider.FormsProviderAPI.FormsColumns;
 import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
 import org.odk.collect.android.tasks.DownloadFormsTask;
+import org.odk.collect.android.tasks.DownloadFormsTask.FileResult;
 import org.odk.collect.android.utilities.FileUtils;
 
 import android.content.ContentResolver;
@@ -72,7 +73,7 @@ public class ManageForm {
         	} else {
         		
             	 // Form was not found try downloading it
-            	 File dl = null;
+            	 FileResult dl = null;
             	 
             	 try {
             		 Log.i("ManageForm", "Downloading form");
@@ -88,10 +89,10 @@ public class ManageForm {
             	 try {
             		 Log.i("ManageForm", "Inserting new form into forms database");
             		 ContentValues v = new ContentValues();
-            		 v.put(FormsColumns.FORM_FILE_PATH, dl.getAbsolutePath());
-            		 Log.i("ManageForm abs path", dl.getAbsolutePath());
+            		 v.put(FormsColumns.FORM_FILE_PATH, dl.getFile().getAbsolutePath());
+            		 Log.i("ManageForm abs path", dl.getFile().getAbsolutePath());
 	
-	                 HashMap<String, String> formInfo = FileUtils.parseXML(dl);
+	                 HashMap<String, String> formInfo = FileUtils.parseXML(dl.getFile());
 	                 v.put(FormsColumns.DISPLAY_NAME, formInfo.get(FileUtils.TITLE));
 	                 v.put(FormsColumns.JR_VERSION, formInfo.get(FileUtils.VERSION));
 	                 v.put(FormsColumns.JR_FORM_ID, formInfo.get(FileUtils.FORMID));
@@ -101,7 +102,7 @@ public class ManageForm {
             		 
 	                 formName = formInfo.get(FileUtils.TITLE);
 	                 submissionUri = formInfo.get(FileUtils.SUBMISSIONURI);
-	                 formPath = dl.getAbsolutePath();
+	                 formPath = dl.getFile().getAbsolutePath();
 	                 formId = formInfo.get(FileUtils.FORMID);	// Update the formID with the actual value in the form (should be the same)
 	                 
 	                 /*
