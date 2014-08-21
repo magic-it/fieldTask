@@ -11,4 +11,5 @@ public class TaskResponse {
 	public String status;
 	@SerializedName("data")
 	public List<TaskAssignment> taskAssignments;
+	public List<FormLocator> forms;
 }

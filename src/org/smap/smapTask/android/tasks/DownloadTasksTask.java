@@ -170,7 +170,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
         fda.open();
         fda.beginTransaction();					// Start Transaction
     	
-        // Get the source
+        // Get the source (that is the location of the server that has tasks and forms)
         SharedPreferences settings =
                 PreferenceManager.getDefaultSharedPreferences(Collect.getInstance().getBaseContext());
         String serverUrl = settings.getString(PreferencesActivity.KEY_SERVER_URL, null);
@@ -200,7 +200,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	          	
 	        	/*
 	        	 * If tasks are enabled
-	        	 * Get tasks for this source from the database
+	        	 * Get tasks for this source, that have already been downloaded. from the local database
 	        	 * Add to a hashmap indexed on the source's task id
 	        	 */
 	            if(isCancelled()) { throw new CancelException("cancelled"); };		// Return if the user cancels
@@ -261,7 +261,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	            	Log.i(getClass().getSimpleName(), "Message:" + tr.message);
 	            	
 		            /*
-		             * Loop through the entries from the source
+		             * Loop through the task entries from the source
 		             *   (1) Add entries that have a status of "new", "pending" or "accepted" and are not already on the phone
 		             *   (2) Update the status of database entries where the source status is set to "Missed" or "Cancelled"
 		             */
@@ -457,6 +457,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
     				Log.i(getClass().getSimpleName(), "Task: " + assignment.assignment_id + " Status:" + 
     						assignment.assignment_status + " Mode:" + ta.task.assignment_mode + 
     						" Address: " + ta.task.address + 
+    						" Form: " + ta.task.form_id + " version: " + ta.task.form_version + 
     						" Type: " + ta.task.type + "Assignee: " + assignment.assignee + "Username: " + username);
             		
         			/*
@@ -486,7 +487,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	                		
 	          	  			// Download form and optionally instance data
 	          	  			ManageForm mf = new ManageForm();
-	          	  			ManageFormResponse mfr = mf.insertForm(ta.task.form_id, ta.task.url, ta.task.initial_data, uid);
+	          	  			ManageFormResponse mfr = mf.insertForm(ta.task.form_id, ta.task.form_version, ta.task.url, ta.task.initial_data, uid);
 	          	  			if(!mfr.isError) {
 	          	  				// Create the task entry
 	          	  				fda.createTask(-1, source, ta, mfr.formPath, mfr.instancePath);

@@ -35,22 +35,27 @@ public class ManageForm {
 	 *    the formId must be sourced from the task management system along with the URL so we can check
 	 *    if the form has already been downloaded.  
 	 */
-    public ManageFormResponse insertForm(String formId, String formURL, String initialDataURL, String taskId) {
+    public ManageFormResponse insertForm(String formId, int formVersion, String formURL, String initialDataURL, String taskId) {
         String formName = null;
         String formPath = null;
         String submissionUri = null;
         String instancePath = null;
+        String formVersionString = String.valueOf(formVersion);	
+        
         ManageFormResponse mfResponse = new ManageFormResponse();
         
         Log.i("ManageForm: called:",  
-       		 "formId:" + formId + "-- formUrl:" + formURL + "-- initialDataUrl:" + initialDataURL);
+       		 "formId:" + formId + ":" + formVersion + "-- formUrl:" + formURL + "-- initialDataUrl:" + initialDataURL);
         
 		// Get the form details
    	 	Cursor c = null;		 
         try {
-        	String selectionClause = FormsColumns.JR_FORM_ID + " = ?";
-        	String [] selectionArgs = new String [1];
-        	selectionArgs[0] = formId;
+        	String selectionClause = FormsColumns.JR_FORM_ID + "=? AND "
+					+ FormsColumns.JR_VERSION + "=?";
+        	
+        	String [] selectionArgs = new String[] { formId, formVersionString };
+        	//String [] selectionArgs = new String [1];
+        	//selectionArgs[0] = formId;
         	String [] proj = {FormsColumns._ID, FormsColumns.DISPLAY_NAME, FormsColumns.JR_FORM_ID,
         			FormsColumns.SUBMISSION_URI,FormsColumns.FORM_FILE_PATH}; 
         	
@@ -99,6 +104,8 @@ public class ManageForm {
 	                 v.put(FormsColumns.SUBMISSION_URI, formInfo.get(FileUtils.SUBMISSIONURI));
 	                 v.put(FormsColumns.BASE64_RSA_PUBLIC_KEY, formInfo.get(FileUtils.BASE64_RSA_PUBLIC_KEY));
             		 Log.i("ManageForm display name", formInfo.get(FileUtils.TITLE));
+            		 Log.i("ManageForm ident", formInfo.get(FileUtils.FORMID));
+            		 Log.i("ManageForm version", formInfo.get(FileUtils.VERSION));
             		 
 	                 formName = formInfo.get(FileUtils.TITLE);
 	                 submissionUri = formInfo.get(FileUtils.SUBMISSIONURI);
@@ -110,19 +117,19 @@ public class ManageForm {
 	                  *  Although we have tested the database for the formId previously, it is
 	                  *  possible that the form URL was actually pointing to a form with a different id
 	                  */
-	                selectionClause = FormsColumns.JR_FORM_ID + " = ?";
-	             	selectionArgs = new String [1];
-	             	selectionArgs[0] = formId;
-	             	if(c != null) {
-	             		c.close();
-	             	}
-	                c = resolver.query(FormsColumns.CONTENT_URI, proj, selectionClause, selectionArgs, null);
-	                if(c.getCount() == 0) {
+	                //selectionClause = FormsColumns.JR_FORM_ID + " = ?";
+	             	//selectionArgs = new String [1];
+	             	//selectionArgs[0] = formId;
+	             	//if(c != null) {
+	             	//	c.close();
+	             	//}
+	                //c = resolver.query(FormsColumns.CONTENT_URI, proj, selectionClause, selectionArgs, null);
+	                //if(c.getCount() == 0) {
 	                	Log.i("ManageForm", "Form does not already exist, hence inserting now");
 	                	Collect.getInstance().getContentResolver().insert(FormsColumns.CONTENT_URI, v);
-	                } else {
-	                	Log.i("ManageForm", "Form already downloaded");
-	                }
+	                //} else {
+	                //	Log.i("ManageForm", "Form already downloaded");
+	                //}
 	                 
             	 } catch (Throwable e) {
                		 mfResponse.isError = true;
@@ -164,7 +171,7 @@ public class ManageForm {
 		    
          // Write the new instance entry into the instance content provider
          try {
-        	 mfResponse.mUri = writeInstanceDatabase(formId, formName, submissionUri, instancePath);
+        	 mfResponse.mUri = writeInstanceDatabase(formId, formVersionString, formName, submissionUri, instancePath);
          } catch (Throwable e) {
         	 e.printStackTrace();
        		 mfResponse.isError = true;
@@ -178,13 +185,14 @@ public class ManageForm {
          return mfResponse;
     }
     
-    private Uri writeInstanceDatabase(String jrformid, String formName, 
+    private Uri writeInstanceDatabase(String jrformid, String jrVersion, String formName, 
 			String submissionUri, String instancePath) throws Throwable {
     
     	Log.i("InstanceCreate", "Inserting new instance into database");
     	ContentValues values = new ContentValues();
 	 
     	values.put(InstanceColumns.JR_FORM_ID, jrformid);
+    	values.put(InstanceColumns.JR_VERSION, jrVersion);
     	values.put(InstanceColumns.SUBMISSION_URI, submissionUri);
     	values.put(InstanceColumns.INSTANCE_FILE_PATH, instancePath);
     	values.put(InstanceColumns.DISPLAY_NAME, formName);
