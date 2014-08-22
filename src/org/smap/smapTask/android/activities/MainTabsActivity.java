@@ -313,20 +313,25 @@ public class MainTabsActivity extends TabActivity implements TaskDownloaderListe
 	        Set<String> keys = result.keySet();
 	        Iterator<String> it = keys.iterator();
 	
-	        //String[] selectionArgs = new String[keys.size()];
 	        while (it.hasNext()) {
 	            String key = it.next();
 	            if(key.equals("err_not_enabled")) {
 	            	message.append(this.getString(R.string.smap_tasks_not_enabled));
 	            } else if(key.equals("err_no_tasks")) {
-	            	message.append(this.getString(R.string.smap_no_tasks));
+	            	// No tasks is fine, in fact its the most common state
+	            	//message.append(this.getString(R.string.smap_no_tasks));
 	            } else {	
 	            	message.append(key + " - " + result.get(key) + "\n\n");
 	            }
 	        }
 	
 	        mAlertMsg = message.toString().trim();
-	    	showDialog(ALERT_DIALOG);
+	        if(mAlertMsg.length() > 0) {
+	        	showDialog(ALERT_DIALOG);
+	        } else {
+	        	Intent intent = new Intent("refresh");
+     	        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+	        }
 		}
 	}
 	
