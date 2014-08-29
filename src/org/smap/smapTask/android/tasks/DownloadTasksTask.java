@@ -19,8 +19,10 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.smap.smapTask.android.listeners.TaskDownloaderListener;
+import org.smap.smapTask.android.taskModel.FormLocator;
 import org.smap.smapTask.android.taskModel.TaskResponse;
 import org.smap.smapTask.android.utilities.ManageForm;
 import org.smap.smapTask.android.utilities.ManageFormResponse;
@@ -191,11 +193,6 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
         if(source != null) {
 	        try {
 	        	
-	        	/*
-	        	 * Delete all entries in the database that are "Missed" or "Cancelled
-	        	 * These would have had their status set by the server the last time the user synchronised.  
-	        	 * The user has seen their new status so time to remove.
-	        	 */
 	        	cleanupTasks(fda, source);
 	          	
 	        	/*
@@ -260,11 +257,9 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	            	tr = gson.fromJson(isReader, TaskResponse.class);
 	            	Log.i(getClass().getSimpleName(), "Message:" + tr.message);
 	            	
-		            /*
-		             * Loop through the task entries from the source
-		             *   (1) Add entries that have a status of "new", "pending" or "accepted" and are not already on the phone
-		             *   (2) Update the status of database entries where the source status is set to "Missed" or "Cancelled"
-		             */
+	            	// Synchronise forms
+	            	synchroniseForms(tr.forms, serverUrl);
+		            // Apply task changes
 	            	count += addAndUpdateEntries(tr, fda, taskMap, username, source);
 	        	}
 	        	
@@ -485,9 +480,9 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	          	  			
 	                		if(isCancelled()) { return count; };		// Return if the user cancels
 	                		
-	          	  			// Download form and optionally instance data
+	          	  			// Add instance data
 	          	  			ManageForm mf = new ManageForm();
-	          	  			ManageFormResponse mfr = mf.insertForm(ta.task.form_id, ta.task.form_version, ta.task.url, ta.task.initial_data, uid);
+	          	  			ManageFormResponse mfr = mf.insertInstance(ta.task.form_id, ta.task.form_version, ta.task.url, ta.task.initial_data, uid);
 	          	  			if(!mfr.isError) {
 	          	  				// Create the task entry
 	          	  				fda.createTask(-1, source, ta, mfr.formPath, mfr.instancePath);
@@ -514,6 +509,44 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
         			
         		}// end process for xform task
         	}// end tasks loop
+    	}
+    	
+    	return count;
+	}
+	
+	/*
+     * Synchronise the forms on the server with those on the phone
+     *   (1) Download forms on the server that are not on the phone
+     *   (2) Delete forms not on the server or older versions of forms
+     *       unless there is an uncompleted data instance using that form
+     */
+	private int synchroniseForms(List<FormLocator> forms, String serverUrl) throws Exception {
+    	int count = 0; 
+    	
+    	System.out.println("Synchronise forms");
+    	if(forms == null) {
+    		results.put("err_no_forms", "");
+    	} else {
+    		
+    		HashMap <String, String> formMap = new HashMap <String, String> ();
+          	ManageForm mf = new ManageForm();
+    		
+        	for(FormLocator form : forms) {
+	            
+        		if(isCancelled()) { return count; };		// Return if the user cancels
+	                		
+        		// Set the form url from the 
+        		form.url = serverUrl + "/formXML?key=" + form.ident;
+        		
+        		// Store a hashmap of new forms so we can delete existing forms not in the list
+        		String entryHash = form.ident + "_v_" + form.version;
+        		formMap.put(entryHash, entryHash);
+        		
+	          	// Download form and optionally instance data
+	          	ManageFormResponse mfr = mf.insertForm(form.ident, form.version, form.url);	
+        		
+        	}
+          	ManageFormResponse mfr = mf.deleteForms(formMap);
     	}
     	
     	return count;

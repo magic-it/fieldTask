@@ -8,4 +8,5 @@ public class ManageFormResponse {
 	public Uri mUri;
 	public String formPath;
 	public String instancePath;
+	public int deletedFormCount;
 }
