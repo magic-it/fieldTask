@@ -20,15 +20,22 @@
 
 package org.smap.smapTask.android.activities;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
 import org.odk.collect.android.activities.FormDownloadList;
+import org.odk.collect.android.activities.FormEntryActivity;
+import org.odk.collect.android.activities.InstanceUploaderActivity;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.preferences.AdminPreferencesActivity;
 import org.odk.collect.android.preferences.PreferencesActivity;
+import org.odk.collect.android.provider.InstanceProviderAPI;
+import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+import org.odk.collect.android.tasks.InstanceUploaderTask;
 import org.odk.collect.android.utilities.CompatibilityUtils;
+import org.odk.collect.android.utilities.WebUtils;
 import org.smap.smapTask.android.R;
 import org.smap.smapTask.android.listeners.TaskDownloaderListener;
 import org.smap.smapTask.android.tasks.DownloadTasksTask;
@@ -42,9 +49,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
@@ -329,18 +338,11 @@ public class MainTabsActivity extends TabActivity implements TaskDownloaderListe
 	        if(mAlertMsg.length() > 0) {
 	        	showDialog(ALERT_DIALOG);
 	        } else {
+	         	
 	        	Intent intent = new Intent("refresh");
      	        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
 	        }
-		}
-	}
-	
-    /**
-	 * Dismiss any showing dialogs that we manage.
-	 */
-	private void dismissDialogs() {
-		if (mAlertDialog != null && mAlertDialog.isShowing()) {
-			mAlertDialog.dismiss();
+	        
 		}
 	}
     

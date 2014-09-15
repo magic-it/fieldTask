@@ -14,26 +14,14 @@
 
 package org.smap.smapTask.android.activities;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
-
 import org.smap.smapTask.android.R;
 import org.smap.smapTask.android.adapters.TaskListCursorAdapter;
-import org.smap.smapTask.android.listeners.TaskDownloaderListener;
-import org.smap.smapTask.android.taskModel.UserDetail;
 import org.smap.smapTask.android.tasks.DownloadTasksTask;
 
-import org.odk.collect.android.activities.FormDownloadList;
 import org.odk.collect.android.activities.FormEntryActivity;
-import org.odk.collect.android.activities.MainMenuActivity;
 import org.odk.collect.android.database.FileDbAdapter;
-import org.odk.collect.android.logic.FormDetails;
-import org.odk.collect.android.preferences.AdminPreferencesActivity;
 import org.odk.collect.android.preferences.PreferencesActivity;
 import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
-import org.odk.collect.android.tasks.DownloadFormListTask;
-import org.odk.collect.android.utilities.CompatibilityUtils;
 import org.odk.collect.android.application.Collect;
 
 import com.nutiteq.components.WgsPoint;
@@ -41,9 +29,7 @@ import com.nutiteq.location.LocationListener;
 import com.nutiteq.location.LocationSource;
 import com.nutiteq.location.providers.AndroidGPSProvider;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ListActivity;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -57,20 +43,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.InputType;
-import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 /**
  * Responsible for displaying buttons to launch the major activities. Launches some activities based

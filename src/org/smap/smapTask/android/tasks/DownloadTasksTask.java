@@ -38,12 +38,18 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.database.Assignment;
 import org.odk.collect.android.database.FileDbAdapter;
+import org.odk.collect.android.database.Task;
 import org.odk.collect.android.database.TaskAssignment;
+import org.odk.collect.android.logic.PropertyManager;
 import org.odk.collect.android.preferences.PreferencesActivity;
+import org.odk.collect.android.provider.InstanceProviderAPI;
 import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+import org.odk.collect.android.tasks.InstanceUploaderTask;
+import org.odk.collect.android.utilities.WebUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,10 +57,13 @@ import com.google.gson.JsonSyntaxException;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 /**
@@ -262,18 +271,20 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 		            // Apply task changes
 	            	count += addAndUpdateEntries(tr, fda, taskMap, username, source);
 	        	}
-	        	
+	  
+	            
             	/*
-            	 * Loop through the entries in the database
-            	 *  (1) Update on the server all that have a status of "accepted", "rejected" or "submitted" or "cancelled" or "completed"
+            	 * Notify the server of the phone state
+            	 *  (1) Update on the server all tasls that have a status of "accepted", "rejected" or "submitted" or "cancelled" or "completed"
             	 *      Note in the case of "cancelled" the client is merely acknowledging that it received the cancellation notice
+            	 *  (2) Pass the list of forms and versions that have been applied back to the server
             	 */
 	            if(isCancelled()) { throw new CancelException("cancelled"); };		// Return if the user cancels
 	            
 	        	if(tasksEnabled) {
-		            updateTaskStatusToServer(fda, source, username, password, serverUrl);
+		            updateTaskStatusToServer(fda, source, username, password, serverUrl, tr);
 	        	}
-            	
+	        	            	
 	            /*
 	             * Delete all orphaned tasks (The instance has been deleted)
 	             */
@@ -288,7 +299,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	          	  	Log.i(getClass().getSimpleName(), "Instance:" + instancePath);
 	          	  	
 	          	  	// Delete the task if the instance has been deleted
-          	  		if(!instanceExists(instancePath)) {
+          	  		if(instancePath == null || !instanceExists(instancePath)) {
           	  			fda.deleteTask(tid);
           	  		}
           	  		
@@ -303,8 +314,6 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	            fda.deleteTasksFromSource(source, FileDbAdapter.STATUS_T_REJECTED);
 	            fda.deleteTasksFromSource(source, FileDbAdapter.STATUS_T_SUBMITTED);
 	            
-	            
-	            // Commit the transation
 	            fda.setTransactionSuccessful();	// Commit the transaction
 	            
 	        } catch(JsonSyntaxException e) {
@@ -373,7 +382,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	 *  (1) Update on the server all that have a status of "accepted", "rejected" or "submitted"
 	 */
 	private void updateTaskStatusToServer(FileDbAdapter fda, String source, String username, String password,
-			String serverUrl) throws Exception {
+			String serverUrl, TaskResponse tr) throws Exception {
     	
 		Log.i("updateTaskStatusToServer", "Enter");
 		Cursor taskListCursor = fda.fetchTasksForSource(source, false);
@@ -388,6 +397,12 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	                new UsernamePasswordCredentials(username, password));
         }
         
+        // Add device id to response
+        tr.deviceId = new PropertyManager(Collect.getInstance().getApplicationContext())
+				.getSingularProperty(PropertyManager.OR_DEVICE_ID_PROPERTY);
+        
+        tr.taskAssignments = new ArrayList<TaskAssignment> ();		// Reset the passed in taskAssignments, this wil now contain the resposne
+        
         while(!taskListCursor.isAfterLast()) {
         	
     		if(isCancelled()) { return; };		// Return if the user cancels
@@ -401,33 +416,44 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
   	  		// Call the update service
   	  		if(newStatus != null && syncStatus.equals(FileDbAdapter.STATUS_SYNC_NO)) {
   	  			Log.i(getClass().getSimpleName(), "Updating server with status of " + aid + " to " + newStatus);
-  	  			Assignment a = new Assignment();
-  	  			a.assignment_id = (int)aid;
-  	  			a.assignment_status = newStatus;
-	            
-	            // Call the service
-	            String taskURL = serverUrl + "/surveyKPI/myassignments/" + aid;
-	            HttpPost postRequest = new HttpPost(taskURL);
-	            
-	            ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
-	            postParameters.add(new BasicNameValuePair("assignInput", "{assignment_status: "+ newStatus+ "}"));
-	            
-	            postRequest.setEntity(new UrlEncodedFormEntity(postParameters));
-            	getResponse = client.execute(postRequest);
-            	
-            	int statusCode = getResponse.getStatusLine().getStatusCode();
-            	
-            	if(statusCode != HttpStatus.SC_OK) {
-            		Log.w(getClass().getSimpleName(), "Error:" + statusCode + " for URL " + taskURL);
-            	} else {
-            		Log.w("updateTaskStatusToServer", "Status updated");
-	            	fda.setTaskSynchronized(tid);		// Mark the task status as synchronised
-            	}
+  	  			TaskAssignment ta = new TaskAssignment();
+  	  			ta.assignment = new Assignment();
+  	  			ta.assignment.assignment_id = (int) aid;
+  	  			ta.assignment.task_id = (int) tid;
+  	  			ta.assignment.assignment_status = newStatus;
+
+	            tr.taskAssignments.add(ta);
   	  		}
       	  		
       	  	
      		taskListCursor.moveToNext();
         }
+        
+        // Call the service
+        String taskURL = serverUrl + "/surveyKPI/myassignments";
+        HttpPost postRequest = new HttpPost(taskURL);
+        ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+        
+        Gson gson=  new GsonBuilder().disableHtmlEscaping().setDateFormat("yyyy-MM-dd").create();
+		String resp = gson.toJson(tr);
+		
+        postParameters.add(new BasicNameValuePair("assignInput", resp));
+        
+        postRequest.setEntity(new UrlEncodedFormEntity(postParameters));
+    	getResponse = client.execute(postRequest);
+    	
+    	int statusCode = getResponse.getStatusLine().getStatusCode();
+    	
+    	if(statusCode != HttpStatus.SC_OK) {
+    		Log.w(getClass().getSimpleName(), "Error:" + statusCode + " for URL " + taskURL);
+    	} else {
+    		Log.w("updateTaskStatusToServer", "Status updated");
+    		for(TaskAssignment ta : tr.taskAssignments) {
+    			fda.setTaskSynchronized(ta.assignment.task_id);		// Mark the task status as synchronised
+    		}
+        	
+    	}
+    	
         taskListCursor.close();
 		
 	}
@@ -544,9 +570,13 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
         		
 	          	// Download form and optionally instance data
 	          	ManageFormResponse mfr = mf.insertForm(form.ident, form.version, form.url);	
+	          	if(mfr.isError) {
+	          		results.put("Error " + form.ident , mfr.statusMsg);
+	          	}
         		
         	}
-          	ManageFormResponse mfr = mf.deleteForms(formMap);
+          	// Delete any forms no longer required
+        	mf.deleteForms(formMap, results);
     	}
     	
     	return count;
@@ -577,4 +607,5 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 		cInstanceProvider.close();
     	return exists;
     }
+    
 }

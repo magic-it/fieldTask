@@ -56,12 +56,15 @@ public class ManageForm {
 	             fd.formName = c.getString(c.getColumnIndex(FormsColumns.DISPLAY_NAME));
 	             fd.submissionUri = c.getString(c.getColumnIndex(FormsColumns.SUBMISSION_URI));
 	             fd.formPath = c.getString(c.getColumnIndex(FormsColumns.FORM_FILE_PATH));
+	             fd.exists = true;
 
 	             Log.i("ManageForm: existing form found:", table_id +  
 	            		 "--" + formId + "--" + fd.formName + "--" + 
 	            		 fd.submissionUri + "--" + fd.formPath);
              
-        	} 
+        	} else {
+        		fd.exists = false;
+        	}
 		 } catch (Throwable e) {
        		 Log.e("ManageForm", e.getMessage());
     	 }
@@ -189,7 +192,7 @@ public class ManageForm {
         	 } catch (Throwable e) {
            		 mfResponse.isError = true;
            		 Log.e("ManageForm", e.getMessage());
-        		 mfResponse.statusMsg = "Unable to insert form from " + formURL + " into form database.";
+        		 mfResponse.statusMsg = "Unable to insert form "  + formURL + " into form database.";
       
         		 return mfResponse;
         	 }
@@ -204,10 +207,8 @@ public class ManageForm {
     /*
      * Delete any forms not in the passed in HashMap unless there is an incomplete instance
      */
-    public ManageFormResponse deleteForms(HashMap <String, String> formMap) {
+    public void deleteForms(HashMap <String, String> formMap, HashMap <String, String> results) {
 
-        
-        ManageFormResponse mfResponse = new ManageFormResponse();
         
    	 	Cursor c = null;
         
@@ -244,8 +245,6 @@ public class ManageForm {
 		             }
 	        	 }
 	        	 if(formsToDelete.size() > 0) {
-	        			int deleted = 0;
-	        			
 	        			
 	        			Long[] formArray = formsToDelete.toArray(new Long[formsToDelete.size()]);
 	        			// delete files from database and then from file system
@@ -256,16 +255,15 @@ public class ManageForm {
 	        		                Uri.withAppendedPath(FormsColumns.CONTENT_URI, formArray[i].toString());
 	        		            
 	        		            int wasDeleted = resolver.delete(deleteForm, null, null); 
-	        		            deleted += wasDeleted;
 	        		            
 	        		            if (wasDeleted > 0) {
 	        		            	Collect.getInstance().getActivityLogger().logAction(this, "delete", deleteForm.toString());
 	        		            }
 	        				} catch ( Exception ex ) {
-	        					Log.e("Error deleting forms: ","Exception during delete of: " + formArray[i].toString() + " exception: "  + ex.toString());
+	        					Log.e("Error deleting forms: "," during delete of: " + formArray[i].toString() + " exception: "  + ex.toString());
+	        					results.put("Error " + formArray[i].toString() + ": ", " during delete of form "  + " : " + ex.toString());
 	        				}
 	        		    } 
-	        			mfResponse.deletedFormCount = deleted;
 	
 	        	 }
              
@@ -275,7 +273,6 @@ public class ManageForm {
     	 }
 		c.close();
          
-         return mfResponse;
     }
     
     /*
