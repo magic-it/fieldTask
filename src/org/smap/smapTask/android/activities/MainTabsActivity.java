@@ -20,22 +20,15 @@
 
 package org.smap.smapTask.android.activities;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
 import org.odk.collect.android.activities.FormDownloadList;
-import org.odk.collect.android.activities.FormEntryActivity;
-import org.odk.collect.android.activities.InstanceUploaderActivity;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.preferences.AdminPreferencesActivity;
 import org.odk.collect.android.preferences.PreferencesActivity;
-import org.odk.collect.android.provider.InstanceProviderAPI;
-import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
-import org.odk.collect.android.tasks.InstanceUploaderTask;
 import org.odk.collect.android.utilities.CompatibilityUtils;
-import org.odk.collect.android.utilities.WebUtils;
 import org.smap.smapTask.android.R;
 import org.smap.smapTask.android.listeners.TaskDownloaderListener;
 import org.smap.smapTask.android.tasks.DownloadTasksTask;
@@ -49,11 +42,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
@@ -62,7 +53,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -317,6 +307,7 @@ public class MainTabsActivity extends TabActivity implements TaskDownloaderListe
             // tried to close a dialog not open. don't care.
         }
 
+		Log.i("Download complete: ", result == null ? "null" : result.toString());
 		if(result != null) {
 	        StringBuilder message = new StringBuilder();
 	        Set<String> keys = result.keySet();
@@ -339,10 +330,15 @@ public class MainTabsActivity extends TabActivity implements TaskDownloaderListe
 	        	showDialog(ALERT_DIALOG);
 	        } else {
 	         	
+	        	Log.i("maintabsactivity", "refresh");
 	        	Intent intent = new Intent("refresh");
-     	        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+     	        LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
 	        }
 	        
+		} else {
+         	
+        	Intent intent = new Intent("refresh");
+ 	        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 		}
 	}
     

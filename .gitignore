@@ -1,5 +1,6 @@
 bin/*
 gen/*
+gen
 
 .DS_Store
 .AppleDouble

@@ -561,7 +561,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	            
         		if(isCancelled()) { return count; };		// Return if the user cancels
 	                		
-        		// Set the form url from the 
+        		// Set the form url from the server address and form ident
         		form.url = serverUrl + "/formXML?key=" + form.ident;
         		
         		// Store a hashmap of new forms so we can delete existing forms not in the list

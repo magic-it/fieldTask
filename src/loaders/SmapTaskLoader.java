@@ -1,0 +1,281 @@
+/*
+ * Copyright (C) 2014 Smap Consulting Pty Ltd
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+/*
+ * Responsible for displaying loading tasks
+ * 
+ * @author Neil Penman (neilpenman@gmail.com)
+ */
+package loaders;
+
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.odk.collect.android.application.Collect;
+import org.odk.collect.android.database.FileDbAdapter;
+import org.odk.collect.android.preferences.PreferencesActivity;
+import org.odk.collect.android.provider.FormsProviderAPI.FormsColumns;
+
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.preference.PreferenceManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.util.Log;
+
+/**
+ * An implementation of AsyncTaskLoader which loads a {@code List<TaskEntry>}
+ * containing all tasks on the device.
+ */
+public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
+
+	private Cursor mTaskListCursor = null;
+	private Cursor mFormListCursor = null;
+	private List<TaskEntry> mTasks = null;
+	private SmapTaskObserver mSmapTaskObserver;	// Monitor changes to task data
+
+	public SmapTaskLoader(Context ctx) {
+		super(ctx);
+	}
+
+	/**
+	 * This method is called on a background thread and generates a List of
+	 * {@link AppEntry} objects. 
+	 */
+	@Override
+	public List<TaskEntry> loadInBackground() {
+
+		Log.i("SmapTaskLoader", "+++ loadInBackground() called! +++");
+
+		// Create corresponding array of entries and load their labels.
+		ArrayList<TaskEntry> entries = new ArrayList<TaskEntry>(10);
+		getForms(entries);
+		getTasks(entries);
+
+		return entries;
+	}
+
+	private void getForms(ArrayList<TaskEntry> entries) {
+		
+		if(mFormListCursor == null || mFormListCursor.isClosed()) {
+			String [] proj = {FormsColumns._ID, 
+					FormsColumns.JR_FORM_ID, 
+					FormsColumns.JR_VERSION, 
+					FormsColumns.DISPLAY_NAME}; 
+    	
+			final ContentResolver resolver = Collect.getInstance().getContentResolver();
+			mFormListCursor = resolver.query(FormsColumns.CONTENT_URI, proj, null, null, null);
+		}
+
+		Log.i("getFormsArray", "Have the cursor");
+		if(mFormListCursor != null  &&  !mFormListCursor.isClosed()) {
+    		 
+			mFormListCursor.moveToFirst();
+			while (!mFormListCursor.isAfterLast()) {
+        		 
+        		 TaskEntry entry = new TaskEntry(this);
+	            
+        		 entry.type = "form";
+        		 entry.ident = mFormListCursor.getString(mFormListCursor.getColumnIndex(FormsColumns.JR_FORM_ID));
+	             entry.formVersion = mFormListCursor.getInt(mFormListCursor.getColumnIndex(FormsColumns.JR_VERSION));
+	             entry.name = mFormListCursor.getString(mFormListCursor.getColumnIndex(FormsColumns.DISPLAY_NAME));   
+	             entry.id = mFormListCursor.getLong(mFormListCursor.getColumnIndex(FormsColumns._ID));
+	             Log.i("loadInBackground", "    Form:" + entry.name + " : " + entry.id + " : " + entry.ident);
+	             
+	             entries.add(entry);
+	             mFormListCursor.moveToNext();
+        	 }
+    	}
+	}
+	
+	private void getTasks(ArrayList<TaskEntry> entries) {
+		// Get cursor
+		if(mTaskListCursor == null || mTaskListCursor.isClosed()) {
+			FileDbAdapter fda = new FileDbAdapter();
+			fda.open();
+			try {
+				mTaskListCursor = fda.fetchTasksForSource(getSource(), true);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				fda.close();
+			}
+		}
+		
+		if(mTaskListCursor != null && !mTaskListCursor.isClosed()) {
+			mTaskListCursor.moveToFirst();
+			DateFormat dFormat = DateFormat.getDateTimeInstance();
+			while (!mTaskListCursor.isAfterLast()) {
+	
+				TaskEntry entry = new TaskEntry(this);
+				entry.type = "task";
+				entry.name = mTaskListCursor.getString(mTaskListCursor
+						.getColumnIndex(FileDbAdapter.KEY_T_TITLE));
+				entry.status = mTaskListCursor.getString(mTaskListCursor
+						.getColumnIndex(FileDbAdapter.KEY_T_STATUS));
+				entry.taskStart = dFormat
+						.format(mTaskListCursor.getLong(mTaskListCursor
+								.getColumnIndex(FileDbAdapter.KEY_T_SCHEDULED_START)));
+				entry.taskAddress = mTaskListCursor.getString(mTaskListCursor
+						.getColumnIndex(FileDbAdapter.KEY_T_ADDRESS));
+				entry.taskForm = mTaskListCursor.getString(mTaskListCursor
+						.getColumnIndex(FileDbAdapter.KEY_T_TASKFORM));
+				entry.instancePath = mTaskListCursor.getString(mTaskListCursor
+						.getColumnIndex(FileDbAdapter.KEY_T_INSTANCE));
+				entry.id = mTaskListCursor.getLong(mTaskListCursor
+						.getColumnIndex(FileDbAdapter.KEY_T_ID));
+	
+				Log.i("loadInBackground", "    Task:" + entry.name);
+				
+				entries.add(entry);
+				mTaskListCursor.moveToNext();
+			}
+		}
+	}
+	
+	/**
+	 * Called when there is new data to deliver to the client. The superclass
+	 * will deliver it to the registered listener (i.e. the LoaderManager),
+	 * which will forward the results to the client through a call to
+	 * onLoadFinished.
+	 */
+	@Override
+	public void deliverResult(List<TaskEntry> tasks) {
+		if (isReset()) {
+			Log.w("taskloader",
+					"+++ Warning! An async query came in while the Loader was reset! +++");
+
+			if (tasks != null) {
+				releaseResources(tasks);
+				return;
+			}
+		}
+
+		// Hold a reference to the old data so it doesn't get garbage collected.
+		// We must protect it until the new data has been delivered.
+		List<TaskEntry> oldTasks = mTasks;
+		mTasks = tasks;
+
+		if (isStarted()) {
+			super.deliverResult(tasks);
+		}
+
+		// Invalidate the old data as we don't need it any more.
+		if (oldTasks != null && oldTasks != tasks) {
+			releaseResources(oldTasks);
+		}
+	}
+
+	@Override
+	protected void onStartLoading() {
+
+		if (mTasks != null) {
+			deliverResult(mTasks);
+		}
+
+		// Register the observers that will notify the Loader when changes are
+		// made.
+		if (mSmapTaskObserver == null) {
+			mSmapTaskObserver = new SmapTaskObserver(this);
+		}
+
+		if (takeContentChanged()) {
+			forceLoad();
+		} else if (mTasks == null) {
+			forceLoad();
+		}
+	}
+
+	@Override
+	protected void onStopLoading() {
+		Log.i("smapTaskLoader", "+++ onStopLoading() called! +++");
+
+		cancelLoad();
+
+	}
+
+	@Override
+	protected void onReset() {
+		Log.i("SmapTaskLoader", "+++ onReset() called! +++");
+
+		onStopLoading();
+
+		// At this point we can release the resources associated with 'tasks'.
+		if (mTasks != null) {
+			releaseResources(mTasks);
+			mTasks = null;
+		}
+
+		// The Loader is being reset, so we should stop monitoring for changes.
+		if (mSmapTaskObserver != null) {
+			getContext().unregisterReceiver(mSmapTaskObserver);
+			mSmapTaskObserver = null;
+		}
+
+	}
+
+	@Override
+	public void onCanceled(List<TaskEntry> tasks) {
+		Log.i("SmapTaskLoader", "+++ onCanceled() called! +++");
+
+		super.onCanceled(tasks);
+
+		releaseResources(tasks);
+	}
+
+	@Override
+	public void forceLoad() {
+		Log.i("SmapTaskLoader", "+++ forceLoad() called! +++");
+		super.forceLoad();
+	}
+
+	/**
+	 * Helper method to take care of releasing resources associated with an
+	 * actively loaded data set.
+	 */
+	private void releaseResources(List<TaskEntry> tasks) {
+		if(mTaskListCursor != null && !mTaskListCursor.isClosed()) {
+			mTaskListCursor.close();
+			mTaskListCursor = null;
+		}
+		if(mFormListCursor != null && !mFormListCursor.isClosed()) {
+			mFormListCursor.close();
+			mFormListCursor = null;
+		}
+	}
+
+	// Get the task source
+	private String getSource() {
+		SharedPreferences settings = PreferenceManager
+				.getDefaultSharedPreferences(Collect.getInstance()
+						.getBaseContext());
+		String serverUrl = settings.getString(
+				PreferencesActivity.KEY_SERVER_URL, null);
+		String source = null;
+		// Remove the protocol
+		if (serverUrl.startsWith("http")) {
+			int idx = serverUrl.indexOf("//");
+			if (idx > 0) {
+				source = serverUrl.substring(idx + 2);
+			} else {
+				source = serverUrl;
+			}
+		}
+
+		return source;
+	}
+
+}
