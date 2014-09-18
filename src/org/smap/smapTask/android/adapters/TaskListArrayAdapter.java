@@ -94,7 +94,11 @@ public class TaskListArrayAdapter extends ArrayAdapter<TaskEntry> {
     	
     	TextView taskAddressText = (TextView) view.findViewById(R.id.bottomtext);
     	if (taskAddressText != null) {
-    		taskAddressText.setText(KeyValueJsonFns.getValues(item.taskAddress));
+    		if(item.type.equals("form")) {
+    			taskAddressText.setText(getContext().getString(R.string.smap_project) + ": " + item.project);
+    		} else {
+    			taskAddressText.setText(KeyValueJsonFns.getValues(item.taskAddress));
+    		}
     	}
     	 
     	return view;

@@ -74,6 +74,7 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 			String [] proj = {FormsColumns._ID, 
 					FormsColumns.JR_FORM_ID, 
 					FormsColumns.JR_VERSION, 
+					FormsColumns.PROJECT,
 					FormsColumns.DISPLAY_NAME}; 
     	
 			final ContentResolver resolver = Collect.getInstance().getContentResolver();
@@ -91,7 +92,8 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
         		 entry.type = "form";
         		 entry.ident = mFormListCursor.getString(mFormListCursor.getColumnIndex(FormsColumns.JR_FORM_ID));
 	             entry.formVersion = mFormListCursor.getInt(mFormListCursor.getColumnIndex(FormsColumns.JR_VERSION));
-	             entry.name = mFormListCursor.getString(mFormListCursor.getColumnIndex(FormsColumns.DISPLAY_NAME));   
+	             entry.name = mFormListCursor.getString(mFormListCursor.getColumnIndex(FormsColumns.DISPLAY_NAME));  
+	             entry.project = mFormListCursor.getString(mFormListCursor.getColumnIndex(FormsColumns.PROJECT));   
 	             entry.id = mFormListCursor.getLong(mFormListCursor.getColumnIndex(FormsColumns._ID));
 	             Log.i("loadInBackground", "    Form:" + entry.name + " : " + entry.id + " : " + entry.ident);
 	             

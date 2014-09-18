@@ -38,32 +38,23 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.database.Assignment;
 import org.odk.collect.android.database.FileDbAdapter;
-import org.odk.collect.android.database.Task;
 import org.odk.collect.android.database.TaskAssignment;
 import org.odk.collect.android.logic.PropertyManager;
 import org.odk.collect.android.preferences.PreferencesActivity;
-import org.odk.collect.android.provider.InstanceProviderAPI;
 import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
-import org.odk.collect.android.tasks.InstanceUploaderTask;
-import org.odk.collect.android.utilities.WebUtils;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 /**
@@ -78,10 +69,17 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
     FileDbAdapter fda = new FileDbAdapter();
 	Cursor taskListCursor = null;
 	
-	// class used to store status of existing tasks in the database and their database id
+	/*
+	 * class used to store status of existing tasks in the database and their database id
+	 * A hash is created of the data stored in these object to uniquely identify the task
+	 */
+	
 	private class TaskStatus {
+		@SuppressWarnings("unused")
 		public long tid;
+		@SuppressWarnings("unused")
 		public String status;
+		@SuppressWarnings("unused")
 		public boolean keep;
 		
 		public TaskStatus(long tid, String status) {
@@ -90,6 +88,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 			keep = false;
 		}
 	}
+	
    
 	/*
 	 * Clean up after cancel
@@ -254,7 +253,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	            	statusCode = getResponse.getStatusLine().getStatusCode();
 	            	if(statusCode != HttpStatus.SC_OK) {
 	            		Log.w(getClass().getSimpleName(), "Error:" + statusCode + " for URL " + taskURL);
-	            		throw new Exception("Error connecting - check username and password");
+	            		throw new Exception(getResponse.getStatusLine().getReasonPhrase());
 	            	} else {
 	            		HttpEntity getResponseEntity = getResponse.getEntity();
 	            		is = getResponseEntity.getContent();
@@ -399,7 +398,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
         
         // Add device id to response
         tr.deviceId = new PropertyManager(Collect.getInstance().getApplicationContext())
-				.getSingularProperty(PropertyManager.OR_DEVICE_ID_PROPERTY);
+				.getSingularProperty(PropertyManager.DEVICE_ID_PROPERTY);
         
         tr.taskAssignments = new ArrayList<TaskAssignment> ();		// Reset the passed in taskAssignments, this wil now contain the resposne
         
@@ -569,7 +568,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
         		formMap.put(entryHash, entryHash);
         		
 	          	// Download form and optionally instance data
-	          	ManageFormResponse mfr = mf.insertForm(form.ident, form.version, form.url);	
+	          	ManageFormResponse mfr = mf.insertForm(form.ident, form.version, form.url, form.project);	
 	          	if(mfr.isError) {
 	          		results.put("Error " + form.ident , mfr.statusMsg);
 	          	}

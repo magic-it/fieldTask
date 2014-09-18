@@ -16,6 +16,7 @@ public class TaskEntry {
   public String type;	// form or task
   public String status;
   public String name;
+  public String project;
   public String ident;
   public String taskStart;
   public String taskAddress;

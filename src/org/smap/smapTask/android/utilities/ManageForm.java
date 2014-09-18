@@ -123,7 +123,7 @@ public class ManageForm {
 	 *    the formId must be sourced from the task management system along with the URL so we can check
 	 *    if the form has already been downloaded.  
 	 */
-    public ManageFormResponse insertForm(String formId, int formVersion, String formURL) {
+    public ManageFormResponse insertForm(String formId, int formVersion, String formURL, String projectName) {
 
         String formVersionString = String.valueOf(formVersion);	
         
@@ -159,35 +159,19 @@ public class ManageForm {
                  v.put(FormsColumns.DISPLAY_NAME, formInfo.get(FileUtils.TITLE));
                  v.put(FormsColumns.JR_VERSION, formInfo.get(FileUtils.VERSION));
                  v.put(FormsColumns.JR_FORM_ID, formInfo.get(FileUtils.FORMID));
+                 v.put(FormsColumns.PROJECT, formInfo.get(FileUtils.PROJECT));
                  v.put(FormsColumns.SUBMISSION_URI, formInfo.get(FileUtils.SUBMISSIONURI));
                  v.put(FormsColumns.BASE64_RSA_PUBLIC_KEY, formInfo.get(FileUtils.BASE64_RSA_PUBLIC_KEY));
-        		 Log.i("ManageForm display name", formInfo.get(FileUtils.TITLE));
-        		 Log.i("ManageForm ident", formInfo.get(FileUtils.FORMID));
-        		 Log.i("ManageForm version", formInfo.get(FileUtils.VERSION));
+        		
         		 
                  fd.formName = formInfo.get(FileUtils.TITLE);
                  fd.submissionUri = formInfo.get(FileUtils.SUBMISSIONURI);
                  fd.formPath = dl.getFile().getAbsolutePath();
                  formId = formInfo.get(FileUtils.FORMID);	// Update the formID with the actual value in the form (should be the same)
                  
-                 /*
-                  * Before inserting make sure this form isn't already in the database
-                  *  Although we have tested the database for the formId previously, it is
-                  *  possible that the form URL was actually pointing to a form with a different id
-                  */
-                //selectionClause = FormsColumns.JR_FORM_ID + " = ?";
-             	//selectionArgs = new String [1];
-             	//selectionArgs[0] = formId;
-             	//if(c != null) {
-             	//	c.close();
-             	//}
-                //c = resolver.query(FormsColumns.CONTENT_URI, proj, selectionClause, selectionArgs, null);
-                //if(c.getCount() == 0) {
-                	Log.i("ManageForm", "Form does not already exist, hence inserting now");
-                	Collect.getInstance().getContentResolver().insert(FormsColumns.CONTENT_URI, v);
-                //} else {
-                //	Log.i("ManageForm", "Form already downloaded");
-                //}
+                Log.i("ManageForm", "Form does not already exist, hence inserting now");
+                Collect.getInstance().getContentResolver().insert(FormsColumns.CONTENT_URI, v);
+               
                  
         	 } catch (Throwable e) {
            		 mfResponse.isError = true;
