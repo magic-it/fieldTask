@@ -26,6 +26,9 @@ import java.util.Set;
 
 import org.odk.collect.android.activities.FormDownloadList;
 import org.odk.collect.android.application.Collect;
+import org.odk.collect.android.listeners.FormDownloaderListener;
+import org.odk.collect.android.listeners.InstanceUploaderListener;
+import org.odk.collect.android.logic.FormDetails;
 import org.odk.collect.android.preferences.AdminPreferencesActivity;
 import org.odk.collect.android.preferences.PreferencesActivity;
 import org.odk.collect.android.utilities.CompatibilityUtils;
@@ -61,7 +64,10 @@ import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainTabsActivity extends TabActivity implements TaskDownloaderListener{
+public class MainTabsActivity extends TabActivity implements 
+		TaskDownloaderListener, 
+		InstanceUploaderListener,
+		FormDownloaderListener{
 	
     private AlertDialog mAlertDialog;
     private static final int PROGRESS_DIALOG = 1;
@@ -295,6 +301,8 @@ public class MainTabsActivity extends TabActivity implements TaskDownloaderListe
     /*
 	 */
 	public void taskDownloadingComplete(HashMap<String, String> result) {
+		
+		Log.i("taskDownloadingComplete", "Complete");
 		try {
             dismissDialog(PROGRESS_DIALOG);
             removeDialog(PROGRESS_DIALOG);
@@ -481,5 +489,36 @@ public class MainTabsActivity extends TabActivity implements TaskDownloaderListe
         }
         return null;
     }
+
+	@Override
+	public void formsDownloadingComplete(HashMap<FormDetails, String> result) {
+		// TODO Auto-generated method stub
+		// Ignore formsDownloading is called synchronously from taskDownloader
+	}
+
+	@Override
+	public void progressUpdate(String currentFile, int progress, int total) {
+		// TODO Auto-generated method stub
+		mProgressMsg = getString(R.string.fetching_file, currentFile, progress, total);
+		mProgressDialog.setMessage(mProgressMsg);
+	}
+
+	@Override
+	public void uploadingComplete(HashMap<String, String> result) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void progressUpdate(int progress, int total) {
+		 mAlertMsg = getString(R.string.sending_items, progress, total);
+	        mProgressDialog.setMessage(mAlertMsg);
+	}
+
+	@Override
+	public void authRequest(Uri url, HashMap<String, String> doneSoFar) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

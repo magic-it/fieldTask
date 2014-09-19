@@ -21,7 +21,7 @@ public SmapTaskObserver(SmapTaskLoader loader) {
 
   @Override
   public void onReceive(Context context, Intent intent) {
-
-    mLoader.onContentChanged();
+	  Log.i("SmapTaskObserver: ", "++++++++received refresh");
+	  mLoader.onContentChanged();
   }
 }

@@ -23,16 +23,16 @@ import android.util.Log;
 
 public class ManageForm {
 	
-	private class FormDetails {
-		 String formName = null;
-	     String formPath = null;
-	     String submissionUri = null;
-	     boolean exists = false;
+	public class ManageFormDetails {
+		 public String formName = null;
+	     public String formPath = null;
+	     public String submissionUri = null;
+	     public boolean exists = false;
 	}
 	
-	private FormDetails getFormDetails(String formId, String formVersionString) {
+	public ManageFormDetails getFormDetails(String formId, String formVersionString) {
 	
-		FormDetails fd = new FormDetails();
+		ManageFormDetails fd = new ManageFormDetails();
    	 	Cursor c = null;
         
 		try {
@@ -145,7 +145,7 @@ public class ManageForm {
         
         ManageFormResponse mfResponse = new ManageFormResponse();
         
-    	FormDetails fd = getFormDetails(form.ident, formVersionString);    // Get the form details
+    	ManageFormDetails fd = getFormDetails(form.ident, formVersionString);    // Get the form details
 		
     	if(!fd.exists) {	
         	 // Form was not found try downloading it
@@ -284,7 +284,7 @@ public class ManageForm {
         
         ManageFormResponse mfResponse = new ManageFormResponse();
         
-    	FormDetails fd = getFormDetails(formId, formVersionString);    // Get the form details
+    	ManageFormDetails fd = getFormDetails(formId, formVersionString);    // Get the form details
 		
     	if(fd.exists) {
          

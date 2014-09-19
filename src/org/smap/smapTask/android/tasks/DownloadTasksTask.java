@@ -25,6 +25,7 @@ import org.smap.smapTask.android.listeners.TaskDownloaderListener;
 import org.smap.smapTask.android.taskModel.FormLocator;
 import org.smap.smapTask.android.taskModel.TaskResponse;
 import org.smap.smapTask.android.utilities.ManageForm;
+import org.smap.smapTask.android.utilities.ManageForm.ManageFormDetails;
 import org.smap.smapTask.android.utilities.ManageFormResponse;
 
 import org.apache.http.HttpEntity;
@@ -42,11 +43,14 @@ import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.database.Assignment;
 import org.odk.collect.android.database.FileDbAdapter;
 import org.odk.collect.android.database.TaskAssignment;
+import org.odk.collect.android.listeners.FormDownloaderListener;
 import org.odk.collect.android.listeners.InstanceUploaderListener;
+import org.odk.collect.android.logic.FormDetails;
 import org.odk.collect.android.logic.PropertyManager;
 import org.odk.collect.android.preferences.PreferencesActivity;
 import org.odk.collect.android.provider.InstanceProviderAPI;
 import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+import org.odk.collect.android.tasks.DownloadFormsTask;
 import org.odk.collect.android.tasks.InstanceUploaderTask;
 import org.odk.collect.android.tasks.InstanceUploaderTask.Outcome;
 
@@ -271,7 +275,11 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	            	Log.i(getClass().getSimpleName(), "Message:" + tr.message);
 	            	
 	            	// Synchronise forms
-	            	synchroniseForms(tr.forms, serverUrl);
+	            	
+	            	HashMap<FormDetails, String> outcome = synchroniseForms(tr.forms, serverUrl);
+	            	for (FormDetails key : outcome.keySet()) {
+	                	results.put(key.formName, outcome.get(key));
+	                }
 		            // Apply task changes
 	            	count += addAndUpdateEntries(tr, fda, taskMap, username, source);
 	        	}
@@ -356,8 +364,10 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
          * Submit any completed forms
          */
         Outcome outcome = submitCompletedForms();
-        for (String key : outcome.mResults.keySet()) {
-        	results.put(key, outcome.mResults.get(key));
+        if(outcome != null) {
+	        for (String key : outcome.mResults.keySet()) {
+	        	results.put(key, outcome.mResults.get(key));
+	        }
         }
         
   
@@ -395,13 +405,16 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 
             InstanceUploaderTask instanceUploaderTask = new InstanceUploaderTask();
             publishProgress("Submitting " + toUpload.size() + " finalised surveys");
-            //instanceUploaderTask.setUploaderListener((InstanceUploaderListener) mStateListener);
+            instanceUploaderTask.setUploaderListener((InstanceUploaderListener) mStateListener);
 
             Long[] toSendArray = new Long[toUpload.size()];
             toUpload.toArray(toSendArray);
-            Log.i(getClass().getSimpleName(), "Submitting " + toUpload.size() + " forms");
-            return instanceUploaderTask.doInBackground(toSendArray);	// Already running a background task so call direct
-            
+            Log.i(getClass().getSimpleName(), "Submitting " + toUpload.size() + " finalised surveys");
+            if(toUpload.size() > 0) {
+            	return instanceUploaderTask.doInBackground(toSendArray);	// Already running a background task so call direct
+            } else {
+            	return null;
+            }
         
     }
     /*
@@ -597,8 +610,10 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
      *   (2) Delete forms not on the server or older versions of forms
      *       unless there is an uncompleted data instance using that form
      */
-	private int synchroniseForms(List<FormLocator> forms, String serverUrl) throws Exception {
-    	int count = 0; 
+	private HashMap<FormDetails, String> synchroniseForms(List<FormLocator> forms, String serverUrl) throws Exception {
+    	
+
+		HashMap<FormDetails, String> dfResults = null;
     	
     	if(forms == null) {
         	publishProgress("No forms to download");
@@ -606,31 +621,46 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
     		
     		HashMap <String, String> formMap = new HashMap <String, String> ();
           	ManageForm mf = new ManageForm();
+    		ArrayList<FormDetails> toDownload = new ArrayList<FormDetails> ();
     		
+    		// Create an array of ODK form details
         	for(FormLocator form : forms) {
-	            
-        		if(isCancelled()) { return count; };		// Return if the user cancels
-	            
-        		// Set the form url from the server address and form ident
-        		form.url = serverUrl + "/formXML?key=" + form.ident;
+        		String formVersionString = String.valueOf(form.version);
+        		ManageFormDetails mfd = mf.getFormDetails(form.ident, formVersionString);    // Get the form details
+        		if(!mfd.exists) {
+        			form.url = serverUrl + "/formXML?key=" + form.ident;	// Set the form url from the server address and form ident
+        			if(form.hasManifest) {
+        				form.manifestUrl = serverUrl + "/xformsManifest?key=" + form.ident;
+        			}
+        			
+        			FormDetails fd = new FormDetails(form.name, form.url, form.manifestUrl, form.ident, formVersionString);
+        			toDownload.add(fd);
+        		}
         		
         		// Store a hashmap of new forms so we can delete existing forms not in the list
         		String entryHash = form.ident + "_v_" + form.version;
         		formMap.put(entryHash, entryHash);
-        		
-	          	// Download form and optionally instance data
-	          	ManageFormResponse mfr = mf.insertForm(form);
-	          	publishProgress(mfr.statusMsg);
-	          	if(mfr.isError) {
-	          		results.put("Error " + form.ident , mfr.statusMsg);
-	          	} 
-        		
         	}
+	        
+        	DownloadFormsTask downloadFormsTask = new DownloadFormsTask();
+            publishProgress("Downloading " + toDownload.size() + " forms");
+
+            Log.i(getClass().getSimpleName(), "Downloading " + toDownload.size() + " forms");
+            downloadFormsTask.setDownloaderListener((FormDownloaderListener) mStateListener);
+            dfResults = downloadFormsTask.doInBackground(toDownload);
+            
+          	// Download form 
+          	//ManageFormResponse mfr = mf.insertForm(form);
+          	//publishProgress(mfr.statusMsg);
+          	//if(mfr.isError) {
+          	//	results.put("Error " + form.ident , mfr.statusMsg);
+          	//} 
+        		
           	// Delete any forms no longer required
         	mf.deleteForms(formMap, results);
     	}
     	
-    	return count;
+    	return dfResults;
 	}
 
 	/*
