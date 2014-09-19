@@ -196,13 +196,11 @@ public class MainListActivity extends FragmentActivity  {
 	    
 	    @Override
 	    public Loader<List<TaskEntry>> onCreateLoader(int id, Bundle args) {
-	    	Log.i("smap", "+++ onCreateLoader() called! +++");
 	    	return new SmapTaskLoader(getActivity());
 	    }
 	
 	    @Override
 	    public void onLoadFinished(Loader<List<TaskEntry>> loader, List<TaskEntry> data) {
-	    	Log.i("smap", "+++ onLoadFinished() called! +++");
 	    	mAdapter.setData(data);
 
 	    	if (isResumed()) {
@@ -267,11 +265,9 @@ public class MainListActivity extends FragmentActivity  {
 	    	
 	    	if(entry.type.equals("task")) {
 	    		String formPath = Collect.FORMS_PATH + entry.taskForm;
-	    		Log.i("onListItemClick: ", "Launch task " + formPath);
 	    		completeTask(entry.instancePath, formPath, entry.id, entry.status);
 	    	} else {
 	    		Uri formUri = ContentUris.withAppendedId(FormsColumns.CONTENT_URI, entry.id);
-	    		Log.i("onListItemClick: ", "Launch Form " + entry.name);
 	    		startActivity(new Intent(Intent.ACTION_EDIT, formUri));
 	    	}
 

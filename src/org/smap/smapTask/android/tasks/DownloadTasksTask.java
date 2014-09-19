@@ -42,9 +42,14 @@ import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.database.Assignment;
 import org.odk.collect.android.database.FileDbAdapter;
 import org.odk.collect.android.database.TaskAssignment;
+import org.odk.collect.android.listeners.InstanceUploaderListener;
 import org.odk.collect.android.logic.PropertyManager;
 import org.odk.collect.android.preferences.PreferencesActivity;
+import org.odk.collect.android.provider.InstanceProviderAPI;
 import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+import org.odk.collect.android.tasks.InstanceUploaderTask;
+import org.odk.collect.android.tasks.InstanceUploaderTask.Outcome;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -118,7 +123,6 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
             fda.deleteTasksFromSource("local", FileDbAdapter.STATUS_T_SUBMITTED);
         	
         } catch (Exception e) {		
-            publishProgress("Database Error - Failed to remove local tasks");
     		e.printStackTrace();
         } finally {
         	fda.close();
@@ -253,6 +257,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	            	statusCode = getResponse.getStatusLine().getStatusCode();
 	            	if(statusCode != HttpStatus.SC_OK) {
 	            		Log.w(getClass().getSimpleName(), "Error:" + statusCode + " for URL " + taskURL);
+	            		results.put("Get Assignments", getResponse.getStatusLine().getReasonPhrase());
 	            		throw new Exception(getResponse.getStatusLine().getReasonPhrase());
 	            	} else {
 	            		HttpEntity getResponseEntity = getResponse.getEntity();
@@ -306,6 +311,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	            }
 	            taskListCursor.close();
 	            
+	   
             	/*
             	 * Delete all entries in the database that are "Submitted" or "Rejected"
             	 * The user set these status values, no need to keep the tasks
@@ -345,11 +351,59 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	        }
         }
         
-        if(count == 0) {
-    		results.put("err_no_tasks", "");
+        
+        /*
+         * Submit any completed forms
+         */
+        Outcome outcome = submitCompletedForms();
+        for (String key : outcome.mResults.keySet()) {
+        	results.put(key, outcome.mResults.get(key));
         }
+        
+  
     }
 
+    private Outcome submitCompletedForms() {
+       
+        String selection = InstanceColumns.STATUS + "=? or " + InstanceColumns.STATUS + "=?";
+        String selectionArgs[] = {
+                    InstanceProviderAPI.STATUS_COMPLETE,
+                    InstanceProviderAPI.STATUS_SUBMISSION_FAILED
+            };
+
+        ArrayList<Long> toUpload = new ArrayList<Long>();
+        Cursor c = null;
+        try {
+            c = Collect.getInstance().getContentResolver().query(InstanceColumns.CONTENT_URI, null, selection,
+                selectionArgs, null);
+            
+            if (c != null && c.getCount() > 0) {
+                c.move(-1);
+                while (c.moveToNext()) {
+                    Long l = c.getLong(c.getColumnIndex(InstanceColumns._ID));
+                    toUpload.add(Long.valueOf(l));
+                }
+            }
+
+            } catch (Exception e) {
+            	e.printStackTrace();
+            } finally {
+                if (c != null) {
+                    c.close();
+                }
+            }
+
+            InstanceUploaderTask instanceUploaderTask = new InstanceUploaderTask();
+            publishProgress("Submitting " + toUpload.size() + " finalised surveys");
+            //instanceUploaderTask.setUploaderListener((InstanceUploaderListener) mStateListener);
+
+            Long[] toSendArray = new Long[toUpload.size()];
+            toUpload.toArray(toSendArray);
+            Log.i(getClass().getSimpleName(), "Submitting " + toUpload.size() + " forms");
+            return instanceUploaderTask.doInBackground(toSendArray);	// Already running a background task so call direct
+            
+        
+    }
     /*
 	 * Delete all entries in the database that are "Missed" or "Cancelled
 	 * These would have had their status set by the server the last time the user synchronised.  
@@ -464,9 +518,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
      */
 	private int addAndUpdateEntries(TaskResponse tr, FileDbAdapter fda, HashMap<String, TaskStatus> taskMap, String username, String source) throws Exception {
     	int count = 0; 
-    	if(tr.taskAssignments == null) {
-    		results.put("err_no_tasks", "");
-    	} else {
+    	if(tr.taskAssignments != null) {
         	for(TaskAssignment ta : tr.taskAssignments) {
 	            
         		if(isCancelled()) { return count; };		// Return if the user cancels
@@ -548,9 +600,8 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	private int synchroniseForms(List<FormLocator> forms, String serverUrl) throws Exception {
     	int count = 0; 
     	
-    	System.out.println("Synchronise forms");
     	if(forms == null) {
-    		results.put("err_no_forms", "");
+        	publishProgress("No forms to download");
     	} else {
     		
     		HashMap <String, String> formMap = new HashMap <String, String> ();
@@ -559,7 +610,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
         	for(FormLocator form : forms) {
 	            
         		if(isCancelled()) { return count; };		// Return if the user cancels
-	                		
+	            
         		// Set the form url from the server address and form ident
         		form.url = serverUrl + "/formXML?key=" + form.ident;
         		
@@ -568,10 +619,11 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
         		formMap.put(entryHash, entryHash);
         		
 	          	// Download form and optionally instance data
-	          	ManageFormResponse mfr = mf.insertForm(form.ident, form.version, form.url, form.project);	
+	          	ManageFormResponse mfr = mf.insertForm(form);
+	          	publishProgress(mfr.statusMsg);
 	          	if(mfr.isError) {
 	          		results.put("Error " + form.ident , mfr.statusMsg);
-	          	}
+	          	} 
         		
         	}
           	// Delete any forms no longer required

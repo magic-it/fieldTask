@@ -15,14 +15,12 @@ public class SmapTaskObserver extends BroadcastReceiver {
 public SmapTaskObserver(SmapTaskLoader loader) {
     mLoader = loader;
 	
-    Log.i("SmapTaskObserver:", "Register for local messages");
     LocalBroadcastManager.getInstance(mLoader.getContext()).registerReceiver(this,
   	      new IntentFilter("refresh"));
   }
 
   @Override
   public void onReceive(Context context, Intent intent) {
-    Log.i("SmapTaskObserver", "+++ change - Notifying Loader... +++");
 
     mLoader.onContentChanged();
   }

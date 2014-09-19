@@ -13,6 +13,7 @@ import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
 import org.odk.collect.android.tasks.DownloadFormsTask;
 import org.odk.collect.android.tasks.DownloadFormsTask.FileResult;
 import org.odk.collect.android.utilities.FileUtils;
+import org.smap.smapTask.android.taskModel.FormLocator;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -57,10 +58,6 @@ public class ManageForm {
 	             fd.submissionUri = c.getString(c.getColumnIndex(FormsColumns.SUBMISSION_URI));
 	             fd.formPath = c.getString(c.getColumnIndex(FormsColumns.FORM_FILE_PATH));
 	             fd.exists = true;
-
-	             Log.i("ManageForm: existing form found:", table_id +  
-	            		 "--" + formId + "--" + fd.formName + "--" + 
-	            		 fd.submissionUri + "--" + fd.formPath);
              
         	} else {
         		fd.exists = false;
@@ -81,27 +78,46 @@ public class ManageForm {
 		try {
         	
 			// get all complete or failed submission instances
-			String selection = InstanceColumns.STATUS + "=? and "
-					+ InstanceColumns.JR_FORM_ID + "=? and "  
-					+ InstanceColumns.JR_VERSION + "=?";
-			
-			String selectionArgs[] = { InstanceProviderAPI.STATUS_INCOMPLETE, 
+			String selection = null;
+			String selectionArgs1 [] = { InstanceProviderAPI.STATUS_INCOMPLETE, 
 					formId,
 					version
 					};
+			
+			String selectionArgs2 [] = 	{ InstanceProviderAPI.STATUS_INCOMPLETE, 
+					formId
+					};
+			
+			if(version == null) {
+				selection = InstanceColumns.STATUS + "=? and "
+						+ InstanceColumns.JR_FORM_ID + "=? and "  
+						+ InstanceColumns.JR_VERSION + " is null";
+				
+			} else {
+				selection = InstanceColumns.STATUS + "=? and "
+						+ InstanceColumns.JR_FORM_ID + "=? and "  
+						+ InstanceColumns.JR_VERSION + "=?";			
+
+			}
+			
+			
 
         	String [] proj = {InstanceColumns._ID}; 
         	
         	final ContentResolver resolver = Collect.getInstance().getContentResolver();
-        	c = resolver.query(InstanceColumns.CONTENT_URI, proj, selection, selectionArgs, null);
+        	if(version == null) {
+        		c = resolver.query(InstanceColumns.CONTENT_URI, proj, selection, selectionArgs2, null);
+        	} else {
+        		c = resolver.query(InstanceColumns.CONTENT_URI, proj, selection, selectionArgs1, null);
+        	}
             
         	if(c.getCount() > 0) {
         		
             	isIncomplete = true;
              
         	} 
-		 } catch (Throwable e) {
-       		 Log.e("ManageForm", e.getMessage());
+		 } catch (Exception e) {
+       		 Log.e("ManageForm:isIncompleteInstance", "Error: " + e.getMessage());
     	 }
 		c.close();
 		
@@ -123,37 +139,32 @@ public class ManageForm {
 	 *    the formId must be sourced from the task management system along with the URL so we can check
 	 *    if the form has already been downloaded.  
 	 */
-    public ManageFormResponse insertForm(String formId, int formVersion, String formURL, String projectName) {
+    public ManageFormResponse insertForm(FormLocator form) {
 
-        String formVersionString = String.valueOf(formVersion);	
+        String formVersionString = String.valueOf(form.version);	
         
         ManageFormResponse mfResponse = new ManageFormResponse();
         
-        Log.i("ManageForm: called:",  
-       		 "formId:" + formId + ":" + formVersion + "-- formUrl:" + formURL);
-        
-    	FormDetails fd = getFormDetails(formId, formVersionString);    // Get the form details
+    	FormDetails fd = getFormDetails(form.ident, formVersionString);    // Get the form details
 		
     	if(!fd.exists) {	
         	 // Form was not found try downloading it
         	 FileResult dl = null;
         	 
         	 try {
-        		 Log.i("ManageForm", "Downloading form");
+        		 mfResponse.statusMsg = "Downloading form: " + form.name;
         		 DownloadFormsTask dft = new DownloadFormsTask();
-        		 dl = dft.downloadXform(formId, formURL);
+        		 dl = dft.downloadXform(form.ident, form.url);
         	 } catch (Exception e) {
         		 mfResponse.isError = true;
-        		 mfResponse.statusMsg = "Unable to download form from " + formURL;
+        		 mfResponse.statusMsg = "Unable to download form from " + form.url;
         		 return mfResponse;
         	 }
         	 
 
         	 try {
-        		 Log.i("ManageForm", "Inserting new form into forms database");
         		 ContentValues v = new ContentValues();
         		 v.put(FormsColumns.FORM_FILE_PATH, dl.getFile().getAbsolutePath());
-        		 Log.i("ManageForm abs path", dl.getFile().getAbsolutePath());
 
                  HashMap<String, String> formInfo = FileUtils.parseXML(dl.getFile());
                  v.put(FormsColumns.DISPLAY_NAME, formInfo.get(FileUtils.TITLE));
@@ -167,20 +178,21 @@ public class ManageForm {
                  fd.formName = formInfo.get(FileUtils.TITLE);
                  fd.submissionUri = formInfo.get(FileUtils.SUBMISSIONURI);
                  fd.formPath = dl.getFile().getAbsolutePath();
-                 formId = formInfo.get(FileUtils.FORMID);	// Update the formID with the actual value in the form (should be the same)
+                 //form.id = formInfo.get(FileUtils.FORMID);	// Update the formID with the actual value in the form (should be the same)
                  
-                Log.i("ManageForm", "Form does not already exist, hence inserting now");
                 Collect.getInstance().getContentResolver().insert(FormsColumns.CONTENT_URI, v);
                
                  
         	 } catch (Throwable e) {
            		 mfResponse.isError = true;
            		 Log.e("ManageForm", e.getMessage());
-        		 mfResponse.statusMsg = "Unable to insert form "  + formURL + " into form database.";
+        		 mfResponse.statusMsg = "Unable to insert form "  + form.url + " into form database.";
       
         		 return mfResponse;
         	 }
             	 
+    	} else {
+    		mfResponse.statusMsg = "Form: " + form.name + " already downloaded";
     	}
          
          mfResponse.isError = false;
@@ -198,8 +210,6 @@ public class ManageForm {
         
 		try {
         	
-        	//String [] selectionArgs = new String [1];
-        	//selectionArgs[0] = formId;
         	String [] proj = {FormsColumns._ID, FormsColumns.JR_FORM_ID, FormsColumns.JR_VERSION}; 
         	
         	final ContentResolver resolver = Collect.getInstance().getContentResolver();
@@ -213,9 +223,6 @@ public class ManageForm {
 		        	 Long table_id = c.getLong(c.getColumnIndex(FormsColumns._ID));
 		             String formId = c.getString(c.getColumnIndex(FormsColumns.JR_FORM_ID));
 		             String version = c.getString(c.getColumnIndex(FormsColumns.JR_VERSION));
-
-		             Log.i("ManageForm: existing form found:", table_id +  
-	            		 "--" + formId + "--" + version);
 		             
 		             // Check to see if this form was downloaded
 		             if(formMap.get(formId + "_v_" + version) == null) {
@@ -253,7 +260,7 @@ public class ManageForm {
              
         	} 
 		 } catch (Throwable e) {
-       		 Log.e("ManageForm", e.getMessage());
+       		 Log.e("ManageForm", "Error: " + e.getMessage());
     	 }
 		c.close();
          
@@ -277,9 +284,6 @@ public class ManageForm {
         
         ManageFormResponse mfResponse = new ManageFormResponse();
         
-        Log.i("ManageForm: insert instance called:",  
-       		 "formId:" + formId + ":" + formVersion + "-- formUrl:" + formURL + "-- initialDataUrl:" + initialDataURL);
-        
     	FormDetails fd = getFormDetails(formId, formVersionString);    // Get the form details
 		
     	if(fd.exists) {
@@ -287,7 +291,6 @@ public class ManageForm {
 	  		 // Get the instance path
 	         instancePath = getInstancePath(fd.formPath, taskId);
 	         if(instancePath != null && initialDataURL != null) {
-	        	 Log.i("ManageForm Instance Path:", instancePath);
 	        	 File f = null;
 	
 	             f = new File(instancePath);
@@ -327,7 +330,6 @@ public class ManageForm {
     private Uri writeInstanceDatabase(String jrformid, String jrVersion, String formName, 
 			String submissionUri, String instancePath) throws Throwable {
     
-    	Log.i("InstanceCreate", "Inserting new instance into database");
     	ContentValues values = new ContentValues();
 	 
     	values.put(InstanceColumns.JR_FORM_ID, jrformid);

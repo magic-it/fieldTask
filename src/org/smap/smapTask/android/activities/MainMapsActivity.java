@@ -255,7 +255,6 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
 			
 			@Override
 			public void onLocationChanged(Location location) {
-				System.out.println("onLocationChanged() " + location.getLongitude() + ":" + location.getLatitude());
 				
 				if (userPlace != null) {
 					mapComponent.removePlace(userPlace);
@@ -315,13 +314,9 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
     @Override
     protected void onResume() {
         super.onResume();
-        System.out.println("onResume()");
 		if ( locationManager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {		
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30000, (float) 10.0, locationListener);
 		} 
-		//if ( locationManager.isProviderEnabled( LocationManager.NETWORK_PROVIDER ) ) {		
-		//	locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000, 10, locationListener);
-		//}
 		
     	// Register mMessageReceiver to receive messages. (from http://www.vogella.com/articles/AndroidBroadcastReceiver/article.html)
     	LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
@@ -486,7 +481,6 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
      */
     private void refreshTaskOverlay() {
     	
-    	System.out.println("refreshTaskOverlay()");
         Vector<OnMapElement> places = new Vector<OnMapElement>();
         Vector<OnMapElement> polygons = new Vector<OnMapElement>();
         Vector<OnMapElement> linestrings = new Vector<OnMapElement>();
@@ -541,8 +535,6 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
 		    	
 		    	try
 		    	{
-		    		System.out.println("Longitude:" + taskLongitude);
-		    		System.out.println("Longitude:" + taskLatitude);
 		    		double lon = Double.parseDouble(taskLongitude);
 		    		double lat = Double.parseDouble(taskLatitude);
 		    		
@@ -586,13 +578,10 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
 		                	}
 				    	}
 		                
-		                System.out.println("refreshTaskOverlay: task status:" + taskStatus + " -- " + lon + ":" + lat);
 				    	WgsPoint taskPoint = new WgsPoint(lon, lat);
-				    	System.out.println("Adding task:" + taskId);
 				    	
 				    	Place newPlace = new Place((int) taskId, new PlaceLabel(taskName), defaultIcon, taskPoint);
 				    	if(taskGeomType != null && !taskGeomType.equals("POINT")) {
-				    		System.out.println("location:" + taskLocation);
 				    		String[] coords = taskLocation.split(",");
 				    		if(coords.length > 1) {
 				    			Vector<WgsPoint> points = new Vector<WgsPoint>();
@@ -789,9 +778,7 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
 	public void elementClicked(OnMapElement element) {
 
 		if (element != null && element instanceof Place) {
-			System.out.println("elementclicked opening context");
 			currentPlace = (Place) element;
-			//openContextMenu(mMapView);
 			longClickOnMap(mMapView);
 		}
 	}
@@ -833,11 +820,7 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
 		
 		private void addLine(Line line) {
 			WgsPoint[] points = line.getPoints();
-			System.out.println("Adding line with " + points.length + " points");
-			//for(int i = 0; i < points.length; i++) {
-			//	System.out.println("    route point:" + points[i].getLon() + " : " + points[i].getLat());
-			//}
-			System.out.println("Adding line");
+		
 			mapComponent.addLine(line);
 			routeLines.add(line);
 		}
@@ -850,7 +833,6 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
 
 		@Override
 		public void routeFound(Route route) {
-	        System.out.println("routeFound: " + getString(R.string.smap_found_route));
 	                
 	        clearLines();
 	        // add route as line to map
@@ -860,11 +842,9 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
 	        routeLine.setStyle(new LineStyle(lineColors[0],4)); // set non-default style for the route
 
 	        addLine(routeLine);
-	        System.out.println("routeFound: total distance="+route.getRouteSummary().getDistance().getValue() + " " + route.getRouteSummary().getDistance().getUnitOfMeasure() + "s");
 
 	        final RouteInstruction[] instructions = route.getInstructions();
 	        if(instructions.length > 0) {
-	        	System.out.println("Instructions:" + instructions.length);
 				Place[] instructionPlaces = new Place[instructions.length];
 				
 				for (int i = 0; i < instructions.length; i++) {
@@ -924,7 +904,6 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
 	                    //new CloudMadeDirections(nutiteqRouteWaiter,nutiteqRouteWaiter.getStartCoordinates(), nutiteqRouteWaiter.getEndCoordinates(), "Foot",CloudMadeDirections.ROUTE_TYPE_MODIFIER_SHORTEST ,"222c0ceb31794934a888ed9403a005d8",userId).execute();
 	                    break;
 	                case RoutingHandler.ROUTING_YOURNAVIGATION:
-	                	System.out.println("Route:" + userPlace.getWgs().toString() + "::::::" + currentPlace.getWgs().toString());
 	                    new YourNavigationDirections(routingListener, userPlace.getWgs(),  currentPlace.getWgs(), YourNavigationDirections.MOVE_METHOD_CAR, YourNavigationDirections.ROUTE_TYPE_FASTEST).execute();
 	                    break;
 	                    
@@ -968,10 +947,8 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
     	super.onCreateContextMenu(menu, v, menuInfo);
     	
-		System.out.println("onCreateContextMenu()");
 	    if(currentPlace != null) {
 	    	int taskId = currentPlace.getId();	// Use currentPlace to get task Id
-	    	System.out.println("Current taskId:" + taskId);
 	    	Cursor c = null;
 	    	fda = new FileDbAdapter();
 	    	try {
@@ -1001,7 +978,7 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
 	  	  		}
 	  	  	}
     	} else {
-    		System.out.println("currentPlace null");
+    		
     	}
     }
 	
@@ -1135,8 +1112,7 @@ public class MainMapsActivity extends Activity implements TaskDownloaderListener
 		Cursor cInstanceProvider = managedQuery(InstanceColumns.CONTENT_URI, 
 				null, where, whereArgs, null);
 		if(cInstanceProvider.getCount() != 1) {
-			System.out.println("MainListActivity:completeTask: Unique instance not found: count is:" + 
-					cInstanceProvider.getCount());
+			
 		} else {
 			cInstanceProvider.moveToFirst();
 			Uri instanceUri = ContentUris.withAppendedId(InstanceColumns.CONTENT_URI,

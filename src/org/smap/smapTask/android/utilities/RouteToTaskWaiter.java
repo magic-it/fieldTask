@@ -126,6 +126,6 @@ public class RouteToTaskWaiter implements DirectionsWaiter {
 	}
 	
 	public void initialize() {
-	        Log.info("Routewaiter initialize");
+	        
 	}
 }

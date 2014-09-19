@@ -58,8 +58,6 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 	@Override
 	public List<TaskEntry> loadInBackground() {
 
-		Log.i("SmapTaskLoader", "+++ loadInBackground() called! +++");
-
 		// Create corresponding array of entries and load their labels.
 		ArrayList<TaskEntry> entries = new ArrayList<TaskEntry>(10);
 		getForms(entries);
@@ -81,7 +79,6 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 			mFormListCursor = resolver.query(FormsColumns.CONTENT_URI, proj, null, null, null);
 		}
 
-		Log.i("getFormsArray", "Have the cursor");
 		if(mFormListCursor != null  &&  !mFormListCursor.isClosed()) {
     		 
 			mFormListCursor.moveToFirst();
@@ -95,7 +92,6 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 	             entry.name = mFormListCursor.getString(mFormListCursor.getColumnIndex(FormsColumns.DISPLAY_NAME));  
 	             entry.project = mFormListCursor.getString(mFormListCursor.getColumnIndex(FormsColumns.PROJECT));   
 	             entry.id = mFormListCursor.getLong(mFormListCursor.getColumnIndex(FormsColumns._ID));
-	             Log.i("loadInBackground", "    Form:" + entry.name + " : " + entry.id + " : " + entry.ident);
 	             
 	             entries.add(entry);
 	             mFormListCursor.moveToNext();
@@ -139,8 +135,6 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 						.getColumnIndex(FileDbAdapter.KEY_T_INSTANCE));
 				entry.id = mTaskListCursor.getLong(mTaskListCursor
 						.getColumnIndex(FileDbAdapter.KEY_T_ID));
-	
-				Log.i("loadInBackground", "    Task:" + entry.name);
 				
 				entries.add(entry);
 				mTaskListCursor.moveToNext();
@@ -203,7 +197,6 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 
 	@Override
 	protected void onStopLoading() {
-		Log.i("smapTaskLoader", "+++ onStopLoading() called! +++");
 
 		cancelLoad();
 
@@ -211,7 +204,6 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 
 	@Override
 	protected void onReset() {
-		Log.i("SmapTaskLoader", "+++ onReset() called! +++");
 
 		onStopLoading();
 
@@ -223,7 +215,11 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 
 		// The Loader is being reset, so we should stop monitoring for changes.
 		if (mSmapTaskObserver != null) {
-			getContext().unregisterReceiver(mSmapTaskObserver);
+			try {
+				getContext().unregisterReceiver(mSmapTaskObserver);
+			} catch (Exception e) {
+				
+			}
 			mSmapTaskObserver = null;
 		}
 
@@ -231,16 +227,13 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 
 	@Override
 	public void onCanceled(List<TaskEntry> tasks) {
-		Log.i("SmapTaskLoader", "+++ onCanceled() called! +++");
-
+	
 		super.onCanceled(tasks);
-
 		releaseResources(tasks);
 	}
 
 	@Override
 	public void forceLoad() {
-		Log.i("SmapTaskLoader", "+++ forceLoad() called! +++");
 		super.forceLoad();
 	}
 

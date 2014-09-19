@@ -281,6 +281,7 @@ public class MainTabsActivity extends TabActivity implements TaskDownloaderListe
 	/*
 	 * Download task methods
 	 */
+    @Override
 	public void progressUpdate(String progress) {
 		mProgressMsg = progress;
 		mProgressDialog.setMessage(mProgressMsg);		
@@ -307,7 +308,6 @@ public class MainTabsActivity extends TabActivity implements TaskDownloaderListe
             // tried to close a dialog not open. don't care.
         }
 
-		Log.i("Download complete: ", result == null ? "null" : result.toString());
 		if(result != null) {
 	        StringBuilder message = new StringBuilder();
 	        Set<String> keys = result.keySet();
@@ -330,7 +330,6 @@ public class MainTabsActivity extends TabActivity implements TaskDownloaderListe
 	        	showDialog(ALERT_DIALOG);
 	        } else {
 	         	
-	        	Log.i("maintabsactivity", "refresh");
 	        	Intent intent = new Intent("refresh");
      	        LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
 	        }
@@ -355,13 +354,11 @@ public class MainTabsActivity extends TabActivity implements TaskDownloaderListe
 	        switch (requestCode) {
 	            // returns with a form path, start entry
 	            case 10:
-	            	Log.i("MainActivityList", "onActivityResult");
 	            	if (intent.hasExtra("status")) {
 	            		String status = intent.getExtras().getString("status");
 	            		if(status.equals("success")) {
 	            			if (intent.hasExtra("instanceUri")) {
 	    	            		String instanceUri = intent.getExtras().getString("instanceUri");
-	    	            		Log.i("MainListActivity uri", instanceUri);
 	    	                	Intent i = new Intent(this, org.odk.collect.android.activities.FormEntryActivity.class);
 	    	                	Uri inst = Uri.parse(instanceUri); 
 	    	                	i.setData(inst);
