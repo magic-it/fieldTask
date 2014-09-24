@@ -75,8 +75,10 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 					FormsColumns.PROJECT,
 					FormsColumns.DISPLAY_NAME}; 
     	
+			String sortOrder = FormsColumns.DISPLAY_NAME + " ASC, " + FormsColumns.JR_VERSION + " DESC";
+			
 			final ContentResolver resolver = Collect.getInstance().getContentResolver();
-			mFormListCursor = resolver.query(FormsColumns.CONTENT_URI, proj, null, null, null);
+			mFormListCursor = resolver.query(FormsColumns.CONTENT_URI, proj, null, null, sortOrder);
 		}
 
 		if(mFormListCursor != null  &&  !mFormListCursor.isClosed()) {
@@ -234,7 +236,15 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 
 	@Override
 	public void forceLoad() {
+		Log.i("SmapTaskLoader", "+++++++ forceLoad");
 		super.forceLoad();
+	}
+	
+	@Override
+	protected void onForceLoad() {
+		Log.i("SmapTaskLoader", "+++++++ onForceLoad");
+		super.onForceLoad();
+		
 	}
 
 	/**

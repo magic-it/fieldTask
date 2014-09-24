@@ -75,7 +75,7 @@ public class MainListActivity extends FragmentActivity  {
 	    // Create the ListFragment 
 	    FragmentManager fm = getSupportFragmentManager();
 	    if (fm.findFragmentById(android.R.id.content) == null) {
-	      TaskListFragment list = new TaskListFragment(this);
+	      TaskListFragment list = new TaskListFragment();
 	      fm.beginTransaction().add(android.R.id.content, list).commit();
 	    }
 	    
@@ -167,10 +167,9 @@ public class MainListActivity extends FragmentActivity  {
 	  	private MainListActivity mActivity;
 		  	
 
-	    public TaskListFragment(MainListActivity activity) {
-	    	super();
-	    	mActivity = activity;
-	    	
+	    public TaskListFragment() {
+	    	super();    	
+	    	mActivity = (MainListActivity) getActivity();
 	    }
 	    @Override
 	    public void onActivityCreated(Bundle savedInstanceState) {
@@ -229,7 +228,6 @@ public class MainListActivity extends FragmentActivity  {
 	    public boolean onOptionsItemSelected(MenuItem item) {
 	        return super.onOptionsItemSelected(item);
 	    }
-	   
 
 	    
 	    /*
@@ -243,7 +241,7 @@ public class MainListActivity extends FragmentActivity  {
 		    	Intent i = new Intent(getActivity(), org.smap.smapTask.android.activities.TaskAddressActivity.class);
 		        i.putExtra("id", task.id);
 		       
-		        if(mActivity.userLocation != null) {
+		        if(mActivity != null && mActivity.userLocation != null) {
 		        	i.putExtra("lon", String.valueOf(mActivity.userLocation.getLon()));
 		        	i.putExtra("lat", String.valueOf(mActivity.userLocation.getLat()));
 		        }
@@ -286,7 +284,7 @@ public class MainListActivity extends FragmentActivity  {
 				canComplete = fda.canComplete(status);
 				
 				if(canComplete) {
-					if(mActivity.userLocation != null) {
+					if(mActivity != null && mActivity.userLocation != null) {
 						fda.updateAdhocLocation(taskId, String.valueOf(mActivity.userLocation.getLon()), 
 								String.valueOf(mActivity.userLocation.getLat()));
 					}
@@ -310,7 +308,7 @@ public class MainListActivity extends FragmentActivity  {
 	            instancePath
 	        };
 	       
-			Cursor cInstanceProvider = mActivity.getContentResolver().query(InstanceColumns.CONTENT_URI, 
+			Cursor cInstanceProvider = Collect.getInstance().getContentResolver().query(InstanceColumns.CONTENT_URI, 
 					null, where, whereArgs, null);
 			
 			if(cInstanceProvider.getCount() != 1) {

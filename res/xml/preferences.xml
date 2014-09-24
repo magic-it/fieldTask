@@ -19,11 +19,13 @@
 		<EditTextPreference
 			android:id="@+id/username"
 			android:key="username"
+			android:defaultValue="@string/default_username"
 			android:title="@string/username"
 			android:dialogTitle="@string/change_username" />
 		<EditTextPreference
 			android:id="@+id/password"
 			android:key="password"
+			android:defaultValue="@string/default_password"
 			android:title="@string/password"
 			android:inputType="textPassword"
 			android:dialogTitle="@string/change_password" />
