@@ -27,6 +27,7 @@ import org.smap.smapTask.android.taskModel.TaskResponse;
 import org.smap.smapTask.android.utilities.ManageForm;
 import org.smap.smapTask.android.utilities.ManageForm.ManageFormDetails;
 import org.smap.smapTask.android.utilities.ManageFormResponse;
+import org.smap.smapTask.android.utilities.Utilities;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -53,6 +54,7 @@ import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
 import org.odk.collect.android.tasks.DownloadFormsTask;
 import org.odk.collect.android.tasks.InstanceUploaderTask;
 import org.odk.collect.android.tasks.InstanceUploaderTask.Outcome;
+import org.odk.collect.android.utilities.STFileUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -192,7 +194,8 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
         SharedPreferences settings =
                 PreferenceManager.getDefaultSharedPreferences(Collect.getInstance().getBaseContext());
         String serverUrl = settings.getString(PreferencesActivity.KEY_SERVER_URL, null);
-        String source = null;
+        
+        String source = STFileUtils.getSource(serverUrl);
         // Remove the protocol
         if(serverUrl.startsWith("http")) {
         	int idx = serverUrl.indexOf("//");
@@ -274,8 +277,7 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	            	tr = gson.fromJson(isReader, TaskResponse.class);
 	            	Log.i(getClass().getSimpleName(), "Message:" + tr.message);
 	            	
-	            	// Synchronise forms
-	            	
+	            	// Synchronise forms	            	
 	            	HashMap<FormDetails, String> outcome = synchroniseForms(tr.forms, serverUrl);
 	            	for (FormDetails key : outcome.keySet()) {
 	                	results.put(key.formName, outcome.get(key));
@@ -375,10 +377,12 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 
     private Outcome submitCompletedForms() {
        
-        String selection = InstanceColumns.STATUS + "=? or " + InstanceColumns.STATUS + "=?";
+        String selection = InstanceColumns.SOURCE + "=? and (" + InstanceColumns.STATUS + "=? or " + 
+        		InstanceColumns.STATUS + "=?)";
         String selectionArgs[] = {
-                    InstanceProviderAPI.STATUS_COMPLETE,
-                    InstanceProviderAPI.STATUS_SUBMISSION_FAILED
+        		Utilities.getSource(),
+        		InstanceProviderAPI.STATUS_COMPLETE,
+                InstanceProviderAPI.STATUS_SUBMISSION_FAILED                 
             };
 
         ArrayList<Long> toUpload = new ArrayList<Long>();
@@ -572,7 +576,8 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
 	                		
 	          	  			// Add instance data
 	          	  			ManageForm mf = new ManageForm();
-	          	  			ManageFormResponse mfr = mf.insertInstance(ta.task.form_id, ta.task.form_version, ta.task.url, ta.task.initial_data, uid);
+	          	  			ManageFormResponse mfr = mf.insertInstance(ta.task.form_id, ta.task.form_version, 
+	          	  					ta.task.url, ta.task.initial_data, uid);
 	          	  			if(!mfr.isError) {
 	          	  				// Create the task entry
 	          	  				fda.createTask(-1, source, ta, mfr.formPath, mfr.instancePath);
@@ -648,13 +653,6 @@ public class DownloadTasksTask extends AsyncTask<Void, String, HashMap<String, S
             Log.i(getClass().getSimpleName(), "Downloading " + toDownload.size() + " forms");
             downloadFormsTask.setDownloaderListener((FormDownloaderListener) mStateListener);
             dfResults = downloadFormsTask.doInBackground(toDownload);
-            
-          	// Download form 
-          	//ManageFormResponse mfr = mf.insertForm(form);
-          	//publishProgress(mfr.statusMsg);
-          	//if(mfr.isError) {
-          	//	results.put("Error " + form.ident , mfr.statusMsg);
-          	//} 
         		
           	// Delete any forms no longer required
         	mf.deleteForms(formMap, results);

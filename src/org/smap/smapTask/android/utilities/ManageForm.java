@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2014 Smap Consulting Pty Ltd
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package org.smap.smapTask.android.utilities;
 
 import java.io.File;
@@ -212,8 +226,11 @@ public class ManageForm {
         	
         	String [] proj = {FormsColumns._ID, FormsColumns.JR_FORM_ID, FormsColumns.JR_VERSION}; 
         	
+			String selectClause = FormsColumns.SOURCE + "='" + Utilities.getSource() + "' or " + 
+					FormsColumns.SOURCE + "=null";
+        	
         	final ContentResolver resolver = Collect.getInstance().getContentResolver();
-        	c = resolver.query(FormsColumns.CONTENT_URI, proj, null, null, null);
+        	c = resolver.query(FormsColumns.CONTENT_URI, proj, selectClause, null, null);
             
         	ArrayList<Long> formsToDelete = new ArrayList<Long> ();
         	if(c.getCount() > 0) {
@@ -333,6 +350,7 @@ public class ManageForm {
     	ContentValues values = new ContentValues();
 	 
     	values.put(InstanceColumns.JR_FORM_ID, jrformid);
+    	values.put(InstanceColumns.SOURCE, Utilities.getSource());
     	values.put(InstanceColumns.JR_VERSION, jrVersion);
     	values.put(InstanceColumns.SUBMISSION_URI, submissionUri);
     	values.put(InstanceColumns.INSTANCE_FILE_PATH, instancePath);

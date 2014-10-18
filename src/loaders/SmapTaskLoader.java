@@ -27,6 +27,8 @@ import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.database.FileDbAdapter;
 import org.odk.collect.android.preferences.PreferencesActivity;
 import org.odk.collect.android.provider.FormsProviderAPI.FormsColumns;
+import org.odk.collect.android.utilities.STFileUtils;
+import org.smap.smapTask.android.utilities.Utilities;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -76,9 +78,12 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 					FormsColumns.DISPLAY_NAME}; 
     	
 			String sortOrder = FormsColumns.DISPLAY_NAME + " ASC, " + FormsColumns.JR_VERSION + " DESC";
+			String selectClause = FormsColumns.SOURCE + "='" + Utilities.getSource() + "' or " + 
+					FormsColumns.SOURCE + "=null";
+	    	
 			
 			final ContentResolver resolver = Collect.getInstance().getContentResolver();
-			mFormListCursor = resolver.query(FormsColumns.CONTENT_URI, proj, null, null, sortOrder);
+			mFormListCursor = resolver.query(FormsColumns.CONTENT_URI, proj, selectClause, null, sortOrder);
 		}
 
 		if(mFormListCursor != null  &&  !mFormListCursor.isClosed()) {
@@ -107,7 +112,7 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 			FileDbAdapter fda = new FileDbAdapter();
 			fda.open();
 			try {
-				mTaskListCursor = fda.fetchTasksForSource(getSource(), true);
+				mTaskListCursor = fda.fetchTasksForSource(Utilities.getSource(), true);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
@@ -260,27 +265,6 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 			mFormListCursor.close();
 			mFormListCursor = null;
 		}
-	}
-
-	// Get the task source
-	private String getSource() {
-		SharedPreferences settings = PreferenceManager
-				.getDefaultSharedPreferences(Collect.getInstance()
-						.getBaseContext());
-		String serverUrl = settings.getString(
-				PreferencesActivity.KEY_SERVER_URL, null);
-		String source = null;
-		// Remove the protocol
-		if (serverUrl.startsWith("http")) {
-			int idx = serverUrl.indexOf("//");
-			if (idx > 0) {
-				source = serverUrl.substring(idx + 2);
-			} else {
-				source = serverUrl;
-			}
-		}
-
-		return source;
 	}
 
 }
