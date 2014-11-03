@@ -55,7 +55,7 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
 
 	/**
 	 * This method is called on a background thread and generates a List of
-	 * {@link AppEntry} objects. 
+	 * {@link TaskEntry} objects. 
 	 */
 	@Override
 	public List<TaskEntry> loadInBackground() {
@@ -79,7 +79,7 @@ public class SmapTaskLoader extends AsyncTaskLoader<List<TaskEntry>> {
     	
 			String sortOrder = FormsColumns.DISPLAY_NAME + " ASC, " + FormsColumns.JR_VERSION + " DESC";
 			String selectClause = FormsColumns.SOURCE + "='" + Utilities.getSource() + "' or " + 
-					FormsColumns.SOURCE + "=null";
+					FormsColumns.SOURCE + " is null";
 	    	
 			
 			final ContentResolver resolver = Collect.getInstance().getContentResolver();

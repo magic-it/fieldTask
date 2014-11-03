@@ -303,6 +303,10 @@ public class MainTabsActivity extends TabActivity implements
 	public void taskDownloadingComplete(HashMap<String, String> result) {
 		
 		Log.i("taskDownloadingComplete", "Complete");
+    	Log.i("++++taskDownloadingComplete", "Send intent");
+    	Intent intent = new Intent("refresh");
+	    LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
+	    
 		try {
             dismissDialog(PROGRESS_DIALOG);
             removeDialog(PROGRESS_DIALOG);
@@ -336,17 +340,9 @@ public class MainTabsActivity extends TabActivity implements
 	        mAlertMsg = message.toString().trim();
 	        if(mAlertMsg.length() > 0) {
 	        	showDialog(ALERT_DIALOG);
-	        } else {
-	         	
-	        	Intent intent = new Intent("refresh");
-     	        LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
-	        }
+	        } 
 	        
-		} else {
-         	
-        	Intent intent = new Intent("refresh");
- 	        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-		}
+		} 
 	}
     
     /*
@@ -421,9 +417,6 @@ public class MainTabsActivity extends TabActivity implements
                 DialogInterface.OnClickListener quitListener = new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                     	dialog.dismiss();
-                    	// refresh the task list
-                    	Intent intent = new Intent("refresh");
-             	        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                     }
                 };
                 mAlertDialog.setCancelable(false);
