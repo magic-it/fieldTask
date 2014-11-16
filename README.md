@@ -8,8 +8,6 @@ version of odkCollect referenced as a library.
 
 Follow the latest news about Smap on our [blog](http://blog.smap.com.au) and on twitter [@dgmsot](https://twitter.com/dgmsot).
 
-Frequently Asked Questions
----------------------------
 ##### How to install and run
 * Import as GIT project into Eclipse
 * Import smap version of ODK library as a GIT project
