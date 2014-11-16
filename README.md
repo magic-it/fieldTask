@@ -19,4 +19,10 @@ Follow the latest news about Smap on our [blog](http://blog.smap.com.au) and on 
 
 Instructions on installing a Smap server can be found in the operations manual [here](http://www.smap.com.au/downloads.shtml)
 
+Acknowledgements
+----------------
+
+This project includes:
+* the odkCollect Library of (http://opendatakit.org/) from the University of Washington
+
 
