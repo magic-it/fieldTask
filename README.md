@@ -1,6 +1,8 @@
 [Smap fieldTask](http://www.smap.com.au) 
 ======
 
+This repository has been deprecated.  fieldTask has been migrated from Eclipse to Android Studio and is being maintained in a new repository [https://github.com/nap2000/fieldTask2](https://github.com/nap2000/fieldTask2)
+
 fieldTask is an Android client for Smap Server that extends [odkCollect](http://opendatakit.org/use/collect/) with Task Management functionality. It depends on a modified
 version of odkCollect referenced as a library.
 
@@ -19,30 +21,4 @@ Frequently Asked Questions
 
 Instructions on installing a Smap server can be found in the operations manual [here](http://www.smap.com.au/downloads.shtml)
 
-Task Management 
----------------
-
-A user of fieldTask can be assigned tasks to complete as per this [video](http://www.smap.com.au/taskManagement.shtml). 
-
-Future Directions
------------------
-
-Smap Server supports completing surveys using web forms as well as on Android devices.  This isn't as mature as as the Android client however it does already support an updated version of the Task Management API. 
-
-##### Get existing survey data as an XForm instance XML file
-https://hostname/instanceXML/{survey id}/0?datakey={key name}&datakeyvalue={value of key}
-
-##### Update existing results
-https://{hostname}/submission/{instanceid}
-
-Note the instance id of the existing data is included in the instanceXML.  It should be replaced with a new instance id before the results are submitted. However the instance id of the data to be replaced needs to be included in teh submission URL.
-
-This API allows you to maintain data using surveys. In the following video the data is published on a map, however it could also be published in a table as a patient registry or list of assets. fieldTask needs to be customised to access these links using the data keys in a similar way to web forms.
-
-[![ScreenShot](http://img.youtube.com/vi/FUNPOmMnt1I/0.jpg)](https://www.youtube.com/watch?v=FUNPOmMnt1I)
-
-Development
------------
-* Code contributions are very welcome. 
-* [Issue Tracker](https://github.com/smap-consulting/fieldTask/issues)
 
