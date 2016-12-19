@@ -1,7 +1,8 @@
 [Smap fieldTask](http://www.smap.com.au) 
 ======
 
-This repository has been deprecated.  fieldTask has been migrated from Eclipse to Android Studio and is being maintained in a new repository [https://github.com/nap2000/fieldTask2](https://github.com/nap2000/fieldTask2)
+This was the first version of fieldTask.  It has now been replaced by version 4 and is being maintained in a new repository [https://github.com/smap-consulting/fieldTask4](https://github.com/smap-consulting/fieldTask4)
+
 
 fieldTask is an Android client for Smap Server that extends [odkCollect](http://opendatakit.org/use/collect/) with Task Management functionality. It depends on a modified
 version of odkCollect referenced as a library.
